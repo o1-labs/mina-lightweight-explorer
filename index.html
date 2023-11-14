@@ -814,14 +814,16 @@
                       </table>
                     </td>
                   </tr>
-                  <tr class="hover">
-                    <td>Delegate account</td>
-                    <td>
-                      <div class="badge badge-secondary badge-outline">
-                        <a class="link link-secondary" href="./index.html?target=account&publicKey={{delegateAccount.publicKey}}" target="_self">{{delegateAccount.publicKey}}</a>
-                      </div>
-                    </td>
-                  </tr>
+                  {{#delegateAccount}}
+                    <tr class="hover">
+                      <td>Delegate account</td>
+                      <td>
+                        <div class="badge badge-secondary badge-outline">
+                          <a class="link link-secondary" href="./index.html?target=account&publicKey={{delegateAccount.publicKey}}" target="_self">{{delegateAccount.publicKey}}</a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/delegateAccount}}
                   {{#delegators}}
                     <tr class="hover">
                       <td>Delegators</td>

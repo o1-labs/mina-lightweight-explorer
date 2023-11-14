@@ -628,6 +628,11 @@
                 ? `${tokenOwnerSymbol} (MINA)`
                 : tokenOwnerSymbol;
             account.zkappUri = tokenDetails.tokenOwner.zkappUri ?? "N/A";
+          } else {
+            account.tokenSymbol =
+              account.tokenId === minaTokenId
+                ? `${account.tokenSymbol} (MINA)`
+                : account.tokenSymbol;
           }
         }
         if (account.zkappState?.length > 0) {
