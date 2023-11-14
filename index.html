@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <link rel="icon" href="./img/o1labs.png" />
+    <title>Lightweight Mina Explorer</title>
+    <link href="./css/daisyui.css" rel="stylesheet" type="text/css" />
+    <link href="./css/style.css" rel="stylesheet" type="text/css" />
+
+    <script lang="js">
+      const selectedTheme = localStorage.getItem("minaExplorerSelectedTheme");
+      if (selectedTheme) {
+        document.querySelector("html").setAttribute("data-theme", selectedTheme);
+      }
+    </script>
+  </head>
+  <body class="scrollbar">
+    <header class="sticky top-0 z-[999]">
+      <div class="navbar bg-neutral">
+        <div class="flex flex-col w-full lg:flex-row">
+          <div class="flex-grow content-start">
+            <a href="./index.html" class="btn btn-ghost normal-case text-xl">
+              <img src="./img/mina.png" width="30" height="30" alt="" />
+              <span class="text-neutral-content"
+                >Lightweight Mina Explorer</span
+              >
+            </a>
+          </div>
+          <div class="m-6 content-end">
+            <label for="targetGraphQlEndpoint">
+              <span class="text-l text-neutral-content">Target endpoint:</span>
+            </label>
+            <select
+              id="targetGraphQlEndpoint"
+              class="select select-primary"
+            ></select>
+            <button
+              class="btn btn-primary"
+              onclick="addGraphQlEndpointDialog.showModal()"
+            >
+              Add
+            </button>
+            <input
+              id="searchQuery"
+              type="text"
+              placeholder="Search"
+              class="input input-primary w-32 md:w-auto"
+            />
+            <button id="searchButton" class="btn btn-primary my-2 my-sm-0">
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="mb-6">
+      <div class="flex flex-col w-full lg:flex-row">
+        <div class="flex-grow">
+          <div class="text-sm breadcrumbs m-4">
+            <ul id="breadcrumbs">
+              <li title="Network" class="indicator">
+                <div id="breadcrumbsLoader"></div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  class="w-4 h-4 stroke-current"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                  ></path>
+                </svg>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="m-4 content-end">
+          <a
+            href="./index.html?target=chainViz"
+            class="btn btn-outline btn-primary btn-disabled"
+          >
+            ChainViz
+          </a>
+          <a
+            href="./index.html?target=daemonStatus"
+            class="btn btn-outline btn-primary"
+          >
+            Daemon status
+          </a>
+          <a
+            href="./index.html?target=settings"
+            class="btn btn-outline btn-primary"
+          >
+            Settings
+          </a>
+        </div>
+      </div>
+      <div class="divider"></div>
+
+      <!-- Rendered page content using templates -->
+      <div id="pageContent" class="mx-3"></div>
+    </main>
+
+    <!-- Dialogs -->
+    <dialog id="addGraphQlEndpointDialog" class="modal">
+      <div class="modal-box">
+        <form method="dialog">
+          <button
+            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          >
+            ✕
+          </button>
+        </form>
+        <h3 class="font-bold text-lg">Add Mina Daemon GraphQL Endpoint</h3>
+        <p class="py-4">
+          New value will append data stored within the browser's
+          <code>Local Storage</code>
+        </p>
+        <div class="w-full">
+          <div id="invalidUrlAlert" class="mb-4 alert alert-error hidden">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>Invalid URL! Please provide the valid endpoint.</span>
+          </div>
+          <div class="gap-2">
+            <input
+              id="addGraphQlEndpoint"
+              type="text"
+              placeholder="URL"
+              class="input input-primary w-full"
+              autofocus
+            />
+            <button id="addGraphQlEndpointButton" class="btn btn-primary my-2">
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Templates -->
+    <script id="rootTemplate" type="x-tmpl-mustache">
+      <div class="flex">
+        <div class="h-auto flex-grow card bg-base-200 rounded-box p-3 w-[50%] indicator">
+          <h2 class="text-xl mb-2 border-b-2 border-base-100">
+            Recent blocks
+          </h2>
+          <div id="recentBlocksContent">
+            <span class="text-stone-700">No data available yet</span>
+          </div>
+          <div id="recentBlocksContentLoader"></div>
+        </div>
+        <div class="divider divider-horizontal"></div>
+        <div class="h-auto flex-grow card w-[50%]">
+          <div class="flex flex-col w-full border-opacity-50">
+            <div class="h-auto card bg-base-200 rounded-box p-3 w-full indicator">
+              <h2 class="text-xl mb-2 border-b-2 border-base-100">
+                Mempool value transfer transactions
+              </h2>
+              <div id="valueTransfersMempoolContent">
+                <span class="text-stone-700">No data available yet</span>
+              </div>
+              <div id="valueTransfersMempoolContentLoader"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="h-auto card bg-base-200 rounded-box p-3 w-full indicator">
+              <h2 class="text-xl mb-2 border-b-2 border-base-100">
+                Mempool zkApp transactions
+              </h2>
+              <div id="zkAppsMempoolContent">
+                <span class="text-stone-700">No data available yet</span>
+              </div>
+              <div id="zkAppsMempoolContentLoader"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script id="settingsTemplate" type="x-tmpl-mustache">
+      <div class="flex justify-center m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[25%]">
+          <form class="card-body">
+            <div class="form-control">
+              <label class="label" for="psqlConnectionString">
+                <span class="label-text">PostgreSQL connection string</span>
+              </label>
+              <input
+                id="psqlConnectionString"
+                type="text"
+                placeholder="PostgreSQL connection string"
+                class="input input-primary"
+                value="postgresql://postgres:postgres@localhost:5432/archive" />
+            </div>
+            <div class="form-control">
+              <label class="label" for="autoUpdateInterval">
+                <span class="label-text">Auto-update interval (in seconds)</span>
+              </label>
+              <input id="autoUpdateInterval" type="range" min="5" max="25" value="10" step="5" class="range range-primary" />
+              <div class="w-full flex justify-between text-xs px-2">
+                <span>5</span>
+                <span>10</span>
+                <span>15</span>
+                <span>20</span>
+                <span>25</span>
+              </div>
+            </div>
+            <div class="form-control">
+              <label class="label" for="ellipsifyLength">
+                <span class="label-text">Shorten some content if length is greater than <code class="text-primary">N</code> symbols</span>
+              </label>
+              <input
+                id="ellipsifyLength"
+                type="number"
+                min="1"
+                placeholder="Length of content to be ellipsified"
+                class="input input-primary"
+                value="10" />
+            </div>
+            <div class="form-control">
+              <label class="label" for="themeSwitcher">
+                <span class="label-text">Theme</span>
+              </label>
+              <select id="themeSwitcher" class="select select-primary md:w-64"></select>
+              <label class="label">
+                <a href="https://daisyui.com/docs/themes/" class="link link-primary label-text-alt" target="_blank">
+                  Examples
+                </a>
+              </label>
+            </div>
+          </form>
+        </div>
+      </div>
+    </script>
+    <script id="recentBlocksTemplate" type="x-tmpl-mustache">
+      <div class="stats shadow mt-4">
+        <div class="stat">
+          <div class="stat-title text-sm">Blocks</div>
+          <div class="stat-value text-sm">{{blocksCounter}}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title text-sm">Transactions</div>
+          <div class="stat-value text-sm">{{transactionsCounter}}</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="bg-base-100 max-h-[1000px] overflow-x-auto scrollbar">
+        <table class="table table-zebra table-pin-rows table-pin-cols">
+          <thead>
+            <tr>
+              <td>Date</td>
+              <td>Hash</td>
+              <td>Height</td>
+              <td>Slot</td>
+              <td>Epoch</td>
+              <td>Txns</td>
+            </tr>
+          </thead>
+          <tbody>
+            {{#recentBlocks}}
+              <tr class="hover">
+                <td><div class="badge badge-ghost">{{dateView}}</div></td>
+                <td title="{{stateHash}}">
+                  <div class="badge badge-primary badge-outline">
+                    <a class="link link-primary" href="./index.html?target=block&numberOrHash={{stateHash}}" target="_self">{{hashView}}</a>
+                  </div>
+                </td>
+                <td><div class="badge badge-ghost">{{protocolState.consensusState.blockHeight}}</div></td>
+                <td><div class="badge badge-ghost">{{protocolState.consensusState.slot}}</div></td>
+                <td><div class="badge badge-ghost">{{protocolState.consensusState.epoch}}</div></td>
+                <td>
+                  {{^commandTransactionCount}}
+                    <div class="badge badge-ghost">{{commandTransactionCount}}</div>
+                  {{/commandTransactionCount}}
+                  {{#commandTransactionCount}}
+                    <div class="badge badge-primary badge-outline">{{commandTransactionCount}}</div>
+                  {{/commandTransactionCount}}
+                </td>
+              </tr>
+            {{/recentBlocks}}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Date</td>
+              <td>Hash</td>
+              <td>Height</td>
+              <td>Slot</td>
+              <td>Epoch</td>
+              <td>Txns</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </script>
+    <script id="valueTransfersListTemplate" type="x-tmpl-mustache">
+      {{#header}}
+        <div>
+          <h1 class="text-xl underline">{{header}}</h1>
+        </div>
+      {{/header}}
+      <div class="stats shadow mt-4">
+        <div class="stat">
+          <div class="stat-title text-sm">Counter</div>
+          <div class="stat-value text-sm">{{txnsCounter}}</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="bg-base-100 max-h-[500px] overflow-x-auto scrollbar">
+        <table class="table table-zebra table-pin-rows table-pin-cols">
+          <thead>
+            <tr>
+              <td>Hash</td>
+              <td>From</td>
+              <td>To</td>
+              <td>Kind</td>
+              <td>Amount</td>
+              <td>Fee</td>
+              <td>Nonce</td>
+            </tr>
+          </thead>
+          <tbody>
+            {{#valueTransfers}}
+              <tr class="hover">
+                <td title="{{hash}}">
+                  <div class="badge badge-primary badge-outline">
+                    <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">{{hashView}}</a>
+                  </div>
+                </td>
+                <td title="{{feePayer.publicKey}}">
+                  <div class="badge badge-secondary badge-outline">
+                    <a class="link link-secondary" href="./index.html?target=account&publicKey={{feePayer.publicKey}}" target="_self">{{feePayerView}}</a>
+                  </div>
+                </td>
+                <td title="{{receiver.publicKey}}">
+                  <div class="badge badge-secondary badge-outline">
+                    <a class="link link-secondary" href="./index.html?target=account&publicKey={{receiver.publicKey}}" target="_self">{{receiverView}}</a>
+                  </div>
+                </td>
+                <td><div class="badge badge-accent badge-outline">{{kind}}</div></td>
+                <td><div class="badge badge-ghost">{{amountView}}</div></td>
+                <td><div class="badge badge-ghost">{{feeView}}</div></td>
+                <td><div class="badge badge-ghost">{{nonce}}</div></td>
+              </tr>
+            {{/valueTransfers}}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Hash</td>
+              <td>From</td>
+              <td>To</td>
+              <td>Kind</td>
+              <td>Amount</td>
+              <td>Fee</td>
+              <td>Nonce</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </script>
+    <script id="zkAppsListTemplate" type="x-tmpl-mustache">
+      {{#header}}
+        <div>
+          <h1 class="text-xl underline">{{header}}</h1>
+        </div>
+      {{/header}}
+      <div class="stats shadow mt-4">
+        <div class="stat">
+          <div class="stat-title text-sm">Counter</div>
+          <div class="stat-value text-sm">{{txnsCounter}}</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="bg-base-100 max-h-[500px] overflow-x-auto scrollbar">
+        <table class="table table-zebra table-pin-rows table-pin-cols">
+          <thead>
+            <tr>
+              <td>Hash</td>
+              <td>From</td>
+              <td>To</td>
+              <td>Fee</td>
+              <td>Nonce</td>
+            </tr>
+          </thead>
+          <tbody>
+            {{#zkApps}}
+              <tr class="hover">
+                <td title="{{hash}}">
+                  <div class="badge badge-primary badge-outline">
+                    <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">{{hashView}}</a>
+                  </div>
+                </td>
+                <td title="{{zkappCommand.feePayer.body.publicKey}}">
+                  <div class="badge badge-secondary badge-outline">
+                    <a class="link link-secondary" href="./index.html?target=account&publicKey={{zkappCommand.feePayer.body.publicKey}}" target="_self">{{feePayerView}}</a>
+                  </div>
+                </td>
+                <td>
+                  {{^zkappCommand.accountUpdates}}
+                    <div class="badge badge-secondary badge-outline">
+                      No data found
+                    </div>
+                  {{/zkappCommand.accountUpdates}}
+                  {{#zkappCommand.accountUpdates}}
+                    <div class="badge badge-secondary badge-outline" title="{{body.publicKey}}">
+                      <a class="link link-secondary" href="./index.html?target=account&publicKey={{body.publicKey}}" target="_self">{{#ellipsisView}}{{body.publicKey}}{{/ellipsisView}}</a>
+                    </div>
+                    <br />
+                  {{/zkappCommand.accountUpdates}}
+                </td>
+                <td><div class="badge badge-ghost">{{feeView}}</div></td>
+                <td><div class="badge badge-ghost">{{zkappCommand.feePayer.body.nonce}}</div></td>
+              </tr>
+            {{/zkApps}}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Hash</td>
+              <td>From</td>
+              <td>To</td>
+              <td>Fee</td>
+              <td>Nonce</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </script>
+    <script id="blockDetailsTemplate" type="x-tmpl-mustache">
+      <div class="flex justify-center m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+          <div class="card-body">
+            <h1 class="text-2xl underline">Block details</h1>
+            <div class="divider"></div>
+            <table class="table table-pin-rows table-pin-cols">
+              <thead>
+                <tr>
+                  <td>Field</td>
+                  <td>Value</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="hover">
+                  <td>Block height</td>
+                  <td><div class="badge badge-ghost">{{block.protocolState.consensusState.blockHeight}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Slot</td>
+                  <td><div class="badge badge-ghost">{{block.protocolState.consensusState.slot}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Slot since genesis</td>
+                  <td><div class="badge badge-ghost">{{block.protocolState.consensusState.slotSinceGenesis}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Epoch</td>
+                  <td><div class="badge badge-ghost">{{block.protocolState.consensusState.epoch}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Date</td>
+                  <td><div class="badge badge-ghost">{{#dateView}}{{block.protocolState.blockchainState.date}}{{/dateView}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Hash</td>
+                  <td><code class="text-success">{{block.stateHash}}</code></td>
+                </tr>
+                {{#block.protocolState.previousStateHash}}
+                  <tr class="hover">
+                    <td>Parent block</td>
+                    <td>
+                      {{#isFirstBlock}}
+                        <code class="text-success">{{block.protocolState.previousStateHash}}</code>
+                      {{/isFirstBlock}}
+                      {{^isFirstBlock}}
+                        <div class="badge badge-primary badge-outline">
+                          <a class="link link-primary" href="./index.html?target=block&numberOrHash={{block.protocolState.previousStateHash}}" target="_self">{{block.protocolState.previousStateHash}}</a>
+                        </div>
+                      {{/isFirstBlock}}
+                    </td>
+                  </tr>
+                {{/block.protocolState.previousStateHash}}
+                <tr class="hover">
+                  <td>Creator</td>
+                  <td>
+                    <div class="badge badge-secondary badge-outline">
+                      <a class="link link-secondary" href="./index.html?target=account&publicKey={{block.creatorAccount.publicKey}}" target="_self">{{block.creatorAccount.publicKey}}</a>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover">
+                  <td>Winner account</td>
+                  <td>
+                    <div class="badge badge-secondary badge-outline">
+                      <a class="link link-secondary" href="./index.html?target=account&publicKey={{block.winnerAccount.publicKey}}" target="_self">{{block.winnerAccount.publicKey}}</a>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover">
+                  <td>Coinbase rewards</td>
+                  <td><div class="badge badge-ghost">{{#amountView}}{{block.transactions.coinbase}}{{/amountView}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Is supercharged coinbase?</td>
+                  <td><div class="badge badge-ghost">{{block.protocolState.consensusState.superchargedCoinbase}}</div></td>
+                </tr>
+                {{#block.transactions.coinbaseReceiverAccount}}
+                  <tr class="hover">
+                    <td>Coinbase receiver</td>
+                    <td>
+                      <div class="badge badge-secondary badge-outline">
+                        <a class="link link-secondary" href="./index.html?target=account&publicKey={{block.transactions.coinbaseReceiverAccount.publicKey}}" target="_self">{{block.transactions.coinbaseReceiverAccount.publicKey}}</a>
+                      </div>
+                    </td>
+                  </tr>
+                {{/block.transactions.coinbaseReceiverAccount}}
+                <tr class="hover">
+                  <td>Last VRF output</td>
+                  <td><code class="text-success">{{block.protocolState.consensusState.lastVrfOutput}}</code></td>
+                </tr>
+                <tr class="hover">
+                  <td>Total currency</td>
+                  <td><div class="badge badge-ghost">{{#amountView}}{{block.protocolState.consensusState.totalCurrency}}{{/amountView}}</div></td>
+                </tr>
+                {{#isFeeTransferAvailable}}
+                  <tr class="hover">
+                    <td>Fee transfers</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Fee</td>
+                            <td>Recipient</td>
+                            <td>Type</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#block.transactions.feeTransfer}}
+                            <tr class="hover">
+                              <td><div class="badge badge-ghost">{{#amountView}}{{fee}}{{/amountView}}</div></td>
+                              <td>
+                                <div class="badge badge-secondary badge-outline" title="{{recipient}}">
+                                  <a class="link link-secondary" href="./index.html?target=account&publicKey={{recipient}}" target="_self">{{#ellipsisView}}{{recipient}}{{/ellipsisView}}</a>
+                                </div>
+                              </td>
+                              <td><div class="badge badge-ghost">{{type}}</div></td>
+                            </tr>
+                          {{/block.transactions.feeTransfer}}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/isFeeTransferAvailable}}
+                <tr class="hover">
+                  <td>Transactions in the block</td>
+                  <td><div class="badge badge-ghost">{{block.commandTransactionCount}}</div></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="divider"></div>
+            <div class="bg-base-200">
+              <div id="blockValueTransfers" class="m-3 scrollbar"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="bg-base-200">
+              <div id="blockZkApps" class="m-3 scrollbar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script id="accountsDetailsTemplate" type="x-tmpl-mustache">
+      <div class="flex justify-center m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+          <div class="card-body">
+            <h1 class="text-2xl underline">Accounts details</h1>
+            {{#accounts}}
+              <div class="divider"></div>
+              <div>
+                <h1 class="text-xl underline">{{tokenSymbol}} token account details</h1>
+              </div>
+              <table class="table table-pin-rows table-pin-cols">
+                <thead>
+                  <tr>
+                    <td>Field</td>
+                    <td>Value</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover">
+                    <td>Public key</td>
+                    <td><code class="text-success">{{publicKey}}</code></td>
+                  </tr>
+                  <tr class="hover">
+                    <td>Index</td>
+                    <td><div class="badge badge-ghost">{{index}}</div></td>
+                  </tr>
+                  <tr class="hover">
+                    <td>Nonce</td>
+                    <td><div class="badge badge-ghost">{{nonce}}</div></td>
+                  </tr>
+                  <tr class="hover">
+                    <td>Inferred nonce</td>
+                    <td><div class="badge badge-ghost">{{inferredNonce}}</div></td>
+                  </tr>
+                  <tr class="hover">
+                    <td>Balance</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Field</td>
+                            <td>Value</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr class="hover">
+                            <td>Total</td>
+                            <td><div class="badge badge-ghost">{{#amountView}}{{balance.total}}{{/amountView}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Locked</td>
+                            <td><div class="badge badge-ghost">{{#amountView}}{{balance.locked}}{{/amountView}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Liquid</td>
+                            <td><div class="badge badge-ghost">{{#amountView}}{{balance.liquid}}{{/amountView}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Unknown</td>
+                            <td><div class="badge badge-ghost">{{#amountView}}{{balance.unknown}}{{/amountView}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Block height</td>
+                            <td><div class="badge badge-ghost">{{balance.blockHeight}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>State hash</td>
+                            <td>
+                              <div class="badge badge-primary badge-outline">
+                                <a class="link link-primary" href="./index.html?target=block&numberOrHash={{balance.stateHash}}" target="_self">{{balance.stateHash}}</a>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  {{#timing.cliffAmount}}
+                    <tr class="hover">
+                      <td>Timing</td>
+                      <td>
+                        <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                          <thead>
+                            <tr>
+                              <td>Field</td>
+                              <td>Value</td>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr class="hover">
+                              <td>Cliff amount</td>
+                              <td><div class="badge badge-ghost">{{#amountView}}{{timing.cliffAmount}}{{/amountView}}</div></td>
+                            </tr>
+                            <tr class="hover">
+                              <td>Cliff time</td>
+                              <td><div class="badge badge-ghost">{{timing.cliffTime}}</div></td>
+                            </tr>
+                            <tr class="hover">
+                              <td>Initial minimum balance</td>
+                              <td><div class="badge badge-ghost">{{#amountView}}{{timing.initialMinimumBalance}}{{/amountView}}</div></td>
+                            </tr>
+                            <tr class="hover">
+                              <td>Vesting period</td>
+                              <td><div class="badge badge-ghost">{{timing.vestingPeriod}}</div></td>
+                            </tr>
+                            <tr class="hover">
+                              <td>Vesting increment</td>
+                              <td><div class="badge badge-ghost">{{#amountView}}{{timing.vestingIncrement}}{{/amountView}}</div></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  {{/timing.cliffAmount}}
+                  <tr class="hover">
+                    <td>Token Id</td>
+                    <td><code class="text-success">{{tokenId}}</code></td>
+                  </tr>
+                  <tr class="hover">
+                    <td>Token symbol</td>
+                    <td><code class="text-success">{{tokenSymbol}}</code></td>
+                  </tr>
+                  <tr class="hover">
+                    <td>zkApp URI</td>
+                    <td>
+                      <div class="badge badge-secondary badge-outline">
+                        <a class="link link-secondary" href="{{zkappUri}}" target="_blank">{{zkappUri}}</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {{#locked}}
+                    <tr class="hover">
+                      <td>Is locked?</td>
+                      <td><div class="badge badge-ghost">{{locked}}</div></td>
+                    </tr>
+                  {{/locked}}
+                  {{#zkappState}}
+                    <tr class="hover">
+                      <td>zkApp state</td>
+                      <td>
+                        <pre class="break-all"><code class="text-secondary">{{zkappState}}</code></pre>
+                      </td>
+                    </tr>
+                  {{/zkappState}}
+                  {{#votingFor}}
+                    <tr class="hover">
+                      <td>Voting for</td>
+                      <td><div class="badge badge-ghost">{{votingFor}}</div></td>
+                    </tr>
+                  {{/votingFor}}
+                  <tr class="hover">
+                    <td>Receipt chain hash</td>
+                    <td><div class="badge badge-ghost">{{receiptChainHash}}</div></td>
+                  </tr>
+                  <tr class="hover">
+                    <td>Is staking active?</td>
+                    <td><div class="badge badge-ghost">{{stakingActive}}</div></td>
+                  </tr>
+                  <!-- <tr class="hover">
+                    <td>Private key path</td>
+                    <td><code class="text-secondary">{{privateKeyPath}}</code></td>
+                  </tr> -->
+                  <tr class="hover">
+                    <td>Permissions</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Field</td>
+                            <td>Value</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr class="hover">
+                            <td>Access</td>
+                            <td><div class="badge badge-ghost">{{permissions.access}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Edit action state</td>
+                            <td><div class="badge badge-ghost">{{permissions.editActionState}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Edit state</td>
+                            <td><div class="badge badge-ghost">{{permissions.editState}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Increment nonce</td>
+                            <td><div class="badge badge-ghost">{{permissions.incrementNonce}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Receive</td>
+                            <td><div class="badge badge-ghost">{{permissions.receive}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Send</td>
+                            <td><div class="badge badge-ghost">{{permissions.send}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Set delegate</td>
+                            <td><div class="badge badge-ghost">{{permissions.setDelegate}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Set permissions</td>
+                            <td><div class="badge badge-ghost">{{permissions.setPermissions}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Set timing</td>
+                            <td><div class="badge badge-ghost">{{permissions.setTiming}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Set token symbol</td>
+                            <td><div class="badge badge-ghost">{{permissions.setTokenSymbol}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Set verification key</td>
+                            <td><div class="badge badge-ghost">{{permissions.setVerificationKey}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Set voting for</td>
+                            <td><div class="badge badge-ghost">{{permissions.setVotingFor}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Set zkApp URI</td>
+                            <td><div class="badge badge-ghost">{{permissions.setZkappUri}}</div></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr class="hover">
+                    <td>Delegate account</td>
+                    <td>
+                      <div class="badge badge-secondary badge-outline">
+                        <a class="link link-secondary" href="./index.html?target=account&publicKey={{delegateAccount.publicKey}}" target="_self">{{delegateAccount.publicKey}}</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {{#delegators}}
+                    <tr class="hover">
+                      <td>Delegators</td>
+                      <td><code class="text-secondary">{{{delegators}}}</code></td>
+                    </tr>
+                  {{/delegators}}
+                  {{#actionState}}
+                    <tr class="hover">
+                      <td>Action state</td>
+                      <td>
+                        <pre class="break-all"><code class="text-secondary">{{actionState}}</code></pre>
+                      </td>
+                    </tr>
+                  {{/actionState}}
+                  {{#verificationKey}}
+                    <tr class="hover">
+                      <td>Verification key hash</td>
+                      <td><code class="text-secondary">{{verificationKey.hash}}</code></td>
+                    </tr>
+                    <tr class="hover">
+                      <td>Verification key</td>
+                      <td>
+                        <details class="collapse collapse-arrow bg-base-200">
+                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                          <div class="collapse-content">
+                            <code class="text-secondary break-all">{{verificationKey.verificationKey}}</code>
+                          </div>
+                        </details>
+                      </td>
+                    </tr>
+                  {{/verificationKey}}
+                </tbody>
+              </table>
+            {{/accounts}}
+          </div>
+        </div>
+      </div>
+    </script>
+    <script id="daemonStatusTemplate" type="x-tmpl-mustache">
+      <div class="flex justify-center m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+          <div class="card-body">
+            <h1 class="text-2xl underline">Daemon status</h1>
+            <div class="divider"></div>
+            <div class="stats shadow mt-4 md:w-[50%] bg-base-200">
+              <div class="stat">
+                <div class="stat-title text-sm">Block height</div>
+                <div class="stat-value text-sm">{{protocolState.consensusState.blockHeight}}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-title text-sm">Slot</div>
+                <div class="stat-value text-sm">{{protocolState.consensusState.slot}}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-title text-sm">Slot since genesis</div>
+                <div class="stat-value text-sm">{{protocolState.consensusState.slotSinceGenesis}}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-title text-sm">Epoch</div>
+                <div class="stat-value text-sm">{{protocolState.consensusState.epoch}}</div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <table class="table table-pin-rows table-pin-cols">
+              <thead>
+                <tr>
+                  <td>Field</td>
+                  <td>Value</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="hover">
+                  <td>Uptime</td>
+                  <td><div class="badge badge-ghost">{{#secondsToHmsView}}{{daemonStatus.uptimeSecs}}{{/secondsToHmsView}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Time offset</td>
+                  <td><div class="badge badge-ghost">{{timeOffset}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>User commands issued</td>
+                  <td><div class="badge badge-ghost">{{daemonStatus.userCommandsSent}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Known accounts</td>
+                  <td><div class="badge badge-ghost">{{daemonStatus.numAccounts}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Genesis and runtime constants</td>
+                  <td>
+                    <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                      <thead>
+                        <tr>
+                          <td>Field</td>
+                          <td>Value</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="hover">
+                          <td>Account creation fee</td>
+                          <td><div class="badge badge-ghost">{{#amountView}}{{genesisConstants.accountCreationFee}}{{/amountView}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Coinbase rewards</td>
+                          <td><div class="badge badge-ghost">{{#amountView}}{{genesisConstants.coinbase}}{{/amountView}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Supercharged coinbase factor</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.proof.supercharged_coinbase_factor}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Proof level</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.proof.level}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Mempool max size</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.daemon.txpool_max_size}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>zkApp proof update cost</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.daemon.zkapp_proof_update_cost}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>zkApp signed single update cost</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.daemon.zkapp_signed_single_update_cost}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>zkApp signed pair update cost</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.daemon.zkapp_signed_pair_update_cost}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>zkApp transaction cost limit</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.daemon.zkapp_transaction_cost_limit}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>zkApp max event elements</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.daemon.max_event_elements}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>zkApp max action elements</td>
+                          <td><div class="badge badge-ghost">{{runtimeConfig.daemon.max_action_elements}}</div></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                <tr class="hover">
+                  <td>Catchup status</td>
+                  <td><code class="text-success">{{daemonStatus.catchupStatus}}</code></td>
+                </tr>
+                <tr class="hover">
+                  <td>Chain Id</td>
+                  <td><code class="text-secondary">{{daemonStatus.chainId}}</code></td>
+                </tr>
+                <tr class="hover">
+                  <td>Commit hash</td>
+                  <td><code class="text-secondary">{{daemonStatus.commitId}}</code></td>
+                </tr>
+                <tr class="hover">
+                  <td>Conf dir</td>
+                  <td><code class="text-secondary">{{daemonStatus.confDir}}</code></td>
+                </tr>
+                <tr class="hover">
+                  <td>Address and port</td>
+                  <td>
+                    <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                      <thead>
+                        <tr>
+                          <td>Field</td>
+                          <td>Value</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="hover">
+                          <td>Bind IP</td>
+                          <td><div class="badge badge-ghost">{{daemonStatus.addrsAndPorts.bindIp}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>External IP</td>
+                          <td><div class="badge badge-ghost">{{daemonStatus.addrsAndPorts.externalIp}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Libp2p</td>
+                          <td><code class="text-secondary">
+                            {{daemonStatus.addrsAndPorts.peer.peerId}}@{{daemonStatus.addrsAndPorts.peer.host}}:{{daemonStatus.addrsAndPorts.peer.libp2pPort}}
+                          </code></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                {{#blockProductionKeysExist}}
+                  <tr class="hover">
+                    <td>Block production keys</td>
+                    <td>
+                      {{#daemonStatus.blockProductionKeys}}
+                        <div class="badge badge-secondary badge-outline" title="{{.}}">
+                          <a class="link link-secondary" href="./index.html?target=account&publicKey={{.}}" target="_self">{{.}}</a>
+                        </div>
+                        <br />
+                      {{/daemonStatus.blockProductionKeys}}
+                    </td>
+                  </tr>
+                {{/blockProductionKeysExist}}
+                <tr class="hover">
+                  <td>Consensus configuration</td>
+                  <td>
+                    <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                      <thead>
+                        <tr>
+                          <td>Field</td>
+                          <td>Value</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="hover">
+                          <td>Genesis timestamp</td>
+                          <td><div class="badge badge-ghost">{{daemonStatus.consensusConfiguration.genesisStateTimestamp}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>K</td>
+                          <td><div class="badge badge-ghost">{{daemonStatus.consensusConfiguration.k}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Epoch duration</td>
+                          <td><div class="badge badge-ghost">{{#secondsToHmsView}}{{daemonStatus.consensusConfiguration.epochDuration}}{{/secondsToHmsView}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Slot duration</td>
+                          <td><div class="badge badge-ghost">{{#secondsToHmsView}}{{daemonStatus.consensusConfiguration.slotDuration}}{{/secondsToHmsView}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Slots per epoch</td>
+                          <td><div class="badge badge-ghost">{{daemonStatus.consensusConfiguration.slotsPerEpoch}}</div></td>
+                        </tr>
+                        <tr class="hover">
+                          <td>Consensus mechanism</td>
+                          <td><code class="text-success">{{daemonStatus.consensusMechanism}}</code></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                {{#currentSnarkWorker}}
+                  <tr class="hover">
+                    <td>Current SNARK worker</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Field</td>
+                            <td>Value</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr class="hover">
+                            <td>Fee</td>
+                            <td><div class="badge badge-ghost">{{#amountView}}{{currentSnarkWorker.fee}}{{/amountView}}</div></td>
+                          </tr>
+                          <tr class="hover">
+                            <td>Account</td>
+                            <td>
+                              <div class="badge badge-secondary badge-outline" title="{{currentSnarkWorker.account.publicKey}}">
+                                <a class="link link-secondary" href="./index.html?target=account&publicKey={{currentSnarkWorker.account.publicKey}}" target="_self">{{currentSnarkWorker.account.publicKey}}</a>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/currentSnarkWorker}}
+                <tr class="hover">
+                  <td>Isolate</td>
+                  <td><div class="badge badge-ghost">{{connectionGatingConfig.isolate}}</div></td>
+                </tr>
+                {{#isInitialPeersAvailable}}
+                  <tr class="hover">
+                    <td>Initial peers</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Address</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#initialPeers}}
+                            <tr class="hover">
+                              <td><code class="text-secondary">{{.}}</code></td>
+                            </tr>
+                          {{/initialPeers}}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/isInitialPeersAvailable}}
+                {{#isPeersAvailable}}
+                  <tr class="hover">
+                    <td>Peers</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Address</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#daemonStatus.peers}}
+                            <td>
+                              <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
+                            </td>
+                          {{/daemonStatus.peers}}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/isPeersAvailable}}
+                {{#isTrustedPeersAvailable}}
+                  <tr class="hover">
+                    <td>Trusted peers</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Address</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#connectionGatingConfig.trustedPeers}}
+                            <td>
+                              <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
+                            </td>
+                          {{/connectionGatingConfig.trustedPeers}}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/isTrustedPeersAvailable}}
+                {{#isBannedPeersAvailable}}
+                  <tr class="hover">
+                    <td>Trusted peers</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Address</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#connectionGatingConfig.bannedPeers}}
+                            <td>
+                              <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
+                            </td>
+                          {{/connectionGatingConfig.bannedPeers}}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/isBannedPeersAvailable}}
+                <tr class="hover">
+                  <td>Genesis ledger accounts</td>
+                  <td>
+                    <div class="bg-base-100 max-h-[500px] overflow-x-auto scrollbar">
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Account</td>
+                            <td>Balance</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#runtimeConfig.ledger.accounts}}
+                            <tr>
+                              <td>
+                                <div class="badge badge-secondary badge-outline" title="{{pk}}">
+                                  <a class="link link-secondary" href="./index.html?target=account&publicKey={{pk}}" target="_self">{{pk}}</a>
+                                </div>
+                              </td>
+                              <td><div class="badge badge-ghost">{{balance}}</div></td>
+                            </tr>
+                          {{/runtimeConfig.ledger.accounts}}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td>Account</td>
+                            <td>Balance</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script id="valueTransferTemplate" type="x-tmpl-mustache">
+      <div class="flex justify-center m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+          <div class="card-body">
+            <h1 class="text-2xl underline">Value transfer transaction details</h1>
+            <div class="divider"></div>
+            <table class="table table-pin-rows table-pin-cols">
+              <thead>
+                <tr>
+                  <td>Field</td>
+                  <td>Value</td>
+                </tr>
+              </thead>
+              <tbody>
+                {{^txn.date}}
+                  <tr class="hover">
+                    <td>State</td>
+                    <td><code class="text-warning">In the mempool</code></td>
+                  </tr>
+                {{/txn.date}}
+                {{#txn.date}}
+                  <tr class="hover">
+                    <td>Date</td>
+                    <td><div class="badge badge-ghost">{{#dateView}}{{txn.date}}{{/dateView}}</div></td>
+                  </tr>
+                {{/txn.date}}
+                <tr class="hover">
+                  <td>Hash</td>
+                  <td><code class="text-success">{{txn.hash}}</code></td>
+                </tr>
+                {{#txn.failureReason}}
+                  <tr class="hover">
+                    <td>Failure reason</td>
+                    <td><code class="text-error">{{txn.failureReason}}</code></td>
+                  </tr>
+                {{/txn.failureReason}}
+                {{#txn.blockHash}}
+                  <tr class="hover">
+                    <td>Block</td>
+                    <td>
+                      <div class="badge badge-primary badge-outline" title="{{txn.blockHash}}">
+                        <a class="link link-primary" href="./index.html?target=block&numberOrHash={{txn.blockHash}}" target="_self">{{txn.blockHash}}</a>
+                      </div>
+                    </td>
+                  </tr>
+                {{/txn.blockHash}}
+                <tr class="hover">
+                  <td>Amount</td>
+                  <td><div class="badge badge-ghost">{{#amountView}}{{txn.amount}}{{/amountView}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>Fee</td>
+                  <td><div class="badge badge-ghost">{{#amountView}}{{txn.fee}}{{/amountView}}</div></td>
+                </tr>
+                {{#txn.feeToken}}
+                  <tr class="hover">
+                    <td>Fee token</td>
+                    <td><code class="text-success">{{txn.feeToken}}</code></td>
+                  </tr>
+                {{/txn.feeToken}}
+                <tr class="hover">
+                  <td>Nonce</td>
+                  <td><div class="badge badge-ghost">{{txn.nonce}}</div></td>
+                </tr>
+                <tr class="hover">
+                  <td>From</td>
+                  <td>
+                    <div class="badge badge-secondary badge-outline" title="{{txn.feePayer.publicKey}}">
+                      <a class="link link-secondary" href="./index.html?target=account&publicKey={{txn.feePayer.publicKey}}" target="_self">{{txn.feePayer.publicKey}}</a>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover">
+                  <td>To</td>
+                  <td>
+                    <div class="badge badge-secondary badge-outline" title="{{txn.receiver.publicKey}}">
+                      <a class="link link-secondary" href="./index.html?target=account&publicKey={{txn.receiver.publicKey}}" target="_self">{{txn.receiver.publicKey}}</a>
+                    </div>
+                  </td>
+                </tr>
+                {{#txn.memo}}
+                  <tr class="hover">
+                    <td>Memo</td>
+                    <td><code class="text-success">{{txn.memo}}</code></td>
+                  </tr>
+                {{/txn.memo}}
+                <tr class="hover">
+                  <td>Kind</td>
+                  <td><div class="badge badge-accent badge-outline">{{txn.kind}}</div></td>
+                </tr>
+                {{#txn.token}}
+                  <tr class="hover">
+                    <td>Token</td>
+                    <td><code class="text-success">{{txn.token}}</code></td>
+                  </tr>
+                {{/txn.token}}
+                {{#txn.validUntil}}
+                  <tr class="hover">
+                    <td>Valid until slot number</td>
+                    <td><div class="badge badge-ghost">{{txn.validUntil}}</div></td>
+                  </tr>
+                {{/txn.validUntil}}
+                {{#txn.id}}
+                  <tr class="hover">
+                    <td>Transaction Id</td>
+                    <td>
+                      <details class="collapse collapse-arrow bg-base-200">
+                        <summary class="collapse-title text-success">Click to open/close large content</summary>
+                        <div class="collapse-content">
+                          <code class="text-secondary break-all">{{txn.id}}</code>
+                        </div>
+                      </details>
+                    </td>
+                  </tr>
+                {{/txn.id}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script id="zkAppTemplate" type="x-tmpl-mustache">
+      <div class="flex justify-center m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+          <div class="card-body">
+            <div class="flex justify-between">
+              <h1 class="text-2xl underline">zkApp transaction details</h1>
+              <button id="toggleLargeContent" class="btn btn-primary btn-outline">Expand all</button>
+            </div>
+            <div class="divider"></div>
+            <table class="table table-pin-rows table-pin-cols">
+              <thead>
+                <tr>
+                  <td>Field</td>
+                  <td>Value</td>
+                </tr>
+              </thead>
+              <tbody>
+                {{^txn.date}}
+                  <tr class="hover">
+                    <td>State</td>
+                    <td><code class="text-warning">In the mempool</code></td>
+                  </tr>
+                {{/txn.date}}
+                {{#txn.date}}
+                  <tr class="hover">
+                    <td>Date</td>
+                    <td><div class="badge badge-ghost">{{#dateView}}{{txn.date}}{{/dateView}}</div></td>
+                  </tr>
+                {{/txn.date}}
+                <tr class="hover">
+                  <td>Hash</td>
+                  <td><code class="text-success">{{txn.hash}}</code></td>
+                </tr>
+                {{#isFailedTxn}}
+                  <tr class="hover">
+                    <td>Failure reasons</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Index</td>
+                            <td>Failures</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#failureReasons}}
+                            <tr class="hover">
+                              <td>#{{index}}</td>
+                              <td>
+                                <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                                  <thead>
+                                    <tr>
+                                      <td>Data</td>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {{#failures}}
+                                      <tr class="hover">
+                                        <td><code class="text-error">{{.}}</code></td>
+                                      </tr>
+                                    {{/failures}}
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          {{/failureReasons}}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/isFailedTxn}}
+                {{#txn.blockHash}}
+                  <tr class="hover">
+                    <td>Block</td>
+                    <td>
+                      <div class="badge badge-primary badge-outline" title="{{txn.blockHash}}">
+                        <a class="link link-primary" href="./index.html?target=block&numberOrHash={{txn.blockHash}}" target="_self">{{txn.blockHash}}</a>
+                      </div>
+                    </td>
+                  </tr>
+                {{/txn.blockHash}}
+                {{#txn.zkappCommand.memo}}
+                  <tr class="hover">
+                    <td>Memo</td>
+                    <td><code class="text-success">{{txn.zkappCommand.memo}}</code></td>
+                  </tr>
+                {{/txn.zkappCommand.memo}}
+                <tr class="hover">
+                  <td>Fee payer</td>
+                  <td>
+                    <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                      <thead>
+                        <tr>
+                          <td>Field</td>
+                          <td>Value</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{#txn.zkappCommand.feePayer.authorization}}
+                          <tr class="hover">
+                            <td>Authorization</td>
+                            <td>
+                              <details class="collapse collapse-arrow bg-base-200">
+                                <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                <div class="collapse-content">
+                                  <pre class="break-all"><code class="text-secondary break-all">{{.}}</code></pre>
+                                </div>
+                              </details>
+                          </tr>
+                        {{/txn.zkappCommand.feePayer.authorization}}
+                        <tr class="hover">
+                          <td>Body</td>
+                          <td>
+                            <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                              <thead>
+                                <tr>
+                                  <td>Field</td>
+                                  <td>Value</td>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr class="hover">
+                                  <td>Fee</td>
+                                  <td><div class="badge badge-ghost">{{#amountView}}{{txn.zkappCommand.feePayer.body.fee}}{{/amountView}}</div></td>
+                                </tr>
+                                <tr class="hover">
+                                  <td>Nonce</td>
+                                  <td><div class="badge badge-ghost">{{txn.zkappCommand.feePayer.body.nonce}}</div></td>
+                                </tr>
+                                <tr class="hover">
+                                  <td>Account</td>
+                                  <td>
+                                    <div class="badge badge-secondary badge-outline" title="{{txn.zkappCommand.feePayer.body.publicKey}}">
+                                      <a class="link link-secondary" href="./index.html?target=account&publicKey={{txn.zkappCommand.feePayer.body.publicKey}}" target="_self">{{txn.zkappCommand.feePayer.body.publicKey}}</a>
+                                    </div>
+                                  </td>
+                                </tr>
+                                {{#txn.zkappCommand.feePayer.body.validUntil}}
+                                  <tr class="hover">
+                                    <td>Valid until slot number</td>
+                                    <td><div class="badge badge-ghost">{{txn.zkappCommand.feePayer.body.validUntil}}</div></td>
+                                  </tr>
+                                {{/txn.zkappCommand.feePayer.body.validUntil}}
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                {{#txn.zkappCommand.accountUpdates}}
+                  <tr class="hover">
+                    <td>{{accountUpdateHeader}}</td>
+                    <td>
+                      <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                        <thead>
+                          <tr>
+                            <td>Field</td>
+                            <td>Value</td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#authorization}}
+                            <tr class="hover">
+                              <td>Authorization</td>
+                              <td>
+                                <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                                  <thead>
+                                    <tr>
+                                      <td>Field</td>
+                                      <td>Value</td>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {{#authorization.proof}}
+                                      <tr class="hover">
+                                        <td>Proof</td>
+                                        <td>
+                                          <details class="collapse collapse-arrow bg-base-200">
+                                            <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                            <div class="collapse-content">
+                                              <code class="text-secondary break-all">{{.}}</code>
+                                            </div>
+                                          </details>
+                                        </td>
+                                      </tr>
+                                    {{/authorization.proof}}
+                                    {{#authorization.signature}}
+                                      <tr class="hover">
+                                        <td>Signature</td>
+                                        <td>
+                                          <details class="collapse collapse-arrow bg-base-200">
+                                            <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                            <div class="collapse-content">
+                                              <code class="text-secondary break-all">{{.}}</code>
+                                            </div>
+                                          </details>
+                                        </td>
+                                      </tr>
+                                    {{/authorization.signature}}
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          {{/authorization}}
+                          <tr class="hover">
+                            <td>Body</td>
+                            <td>
+                              <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                                <thead>
+                                  <tr>
+                                    <td>Field</td>
+                                    <td>Value</td>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr class="hover">
+                                    <td>Recipient</td>
+                                    <td>
+                                      <div class="badge badge-secondary badge-outline" title="{{body.publicKey}}">
+                                        <a class="link link-secondary" href="./index.html?target=account&publicKey={{body.publicKey}}" target="_self">{{body.publicKey}}</a>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                  <tr class="hover">
+                                    <td>Call depth</td>
+                                    <td><div class="badge badge-ghost">{{body.callDepth}}</div></td>
+                                  </tr>
+                                  {{#body.callData}}
+                                    <tr class="hover">
+                                      <td>Call data</td>
+                                      <td>
+                                        <details class="collapse collapse-arrow bg-base-200" open>
+                                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                          <div class="collapse-content">
+                                            <code class="text-secondary break-all">{{.}}</code>
+                                          </div>
+                                        </details>
+                                      </td>
+                                    </tr>
+                                  {{/body.callData}}
+                                  <tr class="hover">
+                                    <td>Implicit account creation fee</td>
+                                    <td><div class="badge badge-ghost">{{body.implicitAccountCreationFee}}</div></td>
+                                  </tr>
+                                  <tr class="hover">
+                                    <td>Increment nonce</td>
+                                    <td><div class="badge badge-ghost">{{body.incrementNonce}}</div></td>
+                                  </tr>
+                                  {{#body.tokenId}}
+                                  <tr class="hover">
+                                    <td>Token Id</td>
+                                    <td><code class="text-success">{{body.tokenId}}</code></td>
+                                  </tr>
+                                  {{/body.tokenId}}
+                                  <tr class="hover">
+                                    <td>Use full commitment</td>
+                                    <td><div class="badge badge-ghost">{{body.useFullCommitment}}</div></td>
+                                  </tr>
+                                  {{#body.authorizationKind}}
+                                    <tr class="hover">
+                                      <td>Authorization kind</td>
+                                      <td>
+                                        <details class="collapse collapse-arrow bg-base-200" open>
+                                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                          <div class="collapse-content">
+                                            <pre><code class="text-secondary break-all">{{.}}</code></pre>
+                                          </div>
+                                        </details>
+                                      </td>
+                                    </tr>
+                                  {{/body.authorizationKind}}
+                                  {{#body.balanceChange}}
+                                    <tr class="hover">
+                                      <td>Balance change</td>
+                                      <td>
+                                        <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                                          <thead>
+                                            <tr>
+                                              <td>Field</td>
+                                              <td>Value</td>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr class="hover">
+                                              <td>Magnitude</td>
+                                              <td><div class="badge badge-ghost">{{body.balanceChange.magnitude}}</div></td>
+                                            </tr>
+                                            <tr class="hover">
+                                              <td>SGN</td>
+                                              <td><div class="badge badge-ghost">{{body.balanceChange.sgn}}</div></td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                  {{/body.balanceChange}}
+                                  {{#body.mayUseToken}}
+                                    <tr class="hover">
+                                      <td>May use token</td>
+                                      <td>
+                                        <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                                          <thead>
+                                            <tr>
+                                              <td>Field</td>
+                                              <td>Value</td>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr class="hover">
+                                              <td>Inherit from parent</td>
+                                              <td><div class="badge badge-ghost">{{body.mayUseToken.inheritFromParent}}</div></td>
+                                            </tr>
+                                            <tr class="hover">
+                                              <td>Parent's own token</td>
+                                              <td><div class="badge badge-ghost">{{body.mayUseToken.parentsOwnToken}}</div></td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                  {{/body.mayUseToken}}
+                                  {{#body.events}}
+                                    <tr class="hover">
+                                      <td>Events</td>
+                                      <td>
+                                        <details class="collapse collapse-arrow bg-base-200" open>
+                                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                          <div class="collapse-content">
+                                            <pre><code class="text-secondary break-all">{{.}}</code></pre>
+                                          </div>
+                                        </details>
+                                      </td>
+                                    </tr>
+                                  {{/body.events}}
+                                  {{#body.actions}}
+                                    <tr class="hover">
+                                      <td>Actions</td>
+                                      <td>
+                                        <details class="collapse collapse-arrow bg-base-200" open>
+                                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                          <div class="collapse-content">
+                                            <pre><code class="text-secondary break-all">{{.}}</code></pre>
+                                          </div>
+                                        </details>
+                                      </td>
+                                    </tr>
+                                  {{/body.actions}}
+                                  {{#body.update}}
+                                    <tr class="hover">
+                                      <td>Update</td>
+                                      <td>
+                                        <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
+                                          <thead>
+                                            <tr>
+                                              <td>Field</td>
+                                              <td>Value</td>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {{#delegate}}
+                                              <tr class="hover">
+                                                <td>Delegate</td>
+                                                <td>
+                                                  <div class="badge badge-secondary badge-outline" title="{{delegate}}">
+                                                    <a class="link link-secondary" href="./index.html?target=account&publicKey={{delegate}}" target="_self">{{delegate}}</a>
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                            {{/delegate}}
+                                            {{#tokenSymbol}}
+                                              <tr class="hover">
+                                                <td>Token symbol</td>
+                                                <td><code class="text-success">{{tokenSymbol}}</code></td>
+                                              </tr>
+                                            {{/tokenSymbol}}
+                                            {{#zkappUri}}
+                                              <tr class="hover">
+                                                <td>zkApp URI</td>
+                                                <td>
+                                                  <div class="badge badge-secondary badge-outline">
+                                                    <a class="link link-secondary" href="{{zkappUri}}" target="_blank">{{zkappUri}}</a>
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                            {{/zkappUri}}
+                                            {{#votingFor}}
+                                              <tr class="hover">
+                                                <td>Voting for</td>
+                                                <td><code class="text-success">{{votingFor}}</code></td>
+                                              </tr>
+                                            {{/votingFor}}
+                                            {{#appState}}
+                                              <tr class="hover">
+                                                <td>zkApp state</td>
+                                                <td>
+                                                  <details class="collapse collapse-arrow bg-base-200" open>
+                                                    <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                                    <div class="collapse-content">
+                                                      <pre><code class="text-secondary break-all">{{.}}</code></pre>
+                                                    </div>
+                                                  </details>
+                                                </td>
+                                              </tr>
+                                            {{/appState}}
+                                            {{#permissions}}
+                                              <tr class="hover">
+                                                <td>Permissions</td>
+                                                <td>
+                                                  <details class="collapse collapse-arrow bg-base-200" open>
+                                                    <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                                    <div class="collapse-content">
+                                                      <pre><code class="text-secondary break-all">{{.}}</code></pre>
+                                                    </div>
+                                                  </details>
+                                                </td>
+                                              </tr>
+                                            {{/permissions}}
+                                            {{#timing}}
+                                              <tr class="hover">
+                                                <td>Timing</td>
+                                                <td>
+                                                  <details class="collapse collapse-arrow bg-base-200" open>
+                                                    <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                                    <div class="collapse-content">
+                                                      <pre><code class="text-secondary break-all">{{.}}</code></pre>
+                                                    </div>
+                                                  </details>
+                                                </td>
+                                              </tr>
+                                            {{/timing}}
+                                            {{#verificationKey}}
+                                              <tr class="hover">
+                                                <td>Verification key hash</td>
+                                                <td>
+                                                  <details class="collapse collapse-arrow bg-base-200" open>
+                                                    <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                                    <div class="collapse-content">
+                                                      <code class="text-secondary break-all">{{verificationKey.hash}}</code>
+                                                    </div>
+                                                  </details>
+                                                </td>
+                                              </tr>
+                                              <tr class="hover">
+                                                <td>Verification key</td>
+                                                <td>
+                                                  <details class="collapse collapse-arrow bg-base-200">
+                                                    <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                                    <div class="collapse-content">
+                                                      <code class="text-secondary break-all">{{verificationKey.data}}</code>
+                                                    </div>
+                                                  </details>
+                                                </td>
+                                              </tr>
+                                            {{/verificationKey}}
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                  {{/body.update}}
+                                  {{#body.preconditions}}
+                                    <tr class="hover">
+                                      <td>Account preconditions</td>
+                                      <td>
+                                        <details class="collapse collapse-arrow bg-base-200" open>
+                                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                          <div class="collapse-content">
+                                            <pre><code class="text-secondary break-all">{{body.preconditions.account}}</code></pre>
+                                          </div>
+                                        </details>
+                                      </td>
+                                    </tr>
+                                    <tr class="hover">
+                                      <td>Network preconditions</td>
+                                      <td>
+                                        <details class="collapse collapse-arrow bg-base-200" open>
+                                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                          <div class="collapse-content">
+                                            <pre><code class="text-secondary break-all">{{body.preconditions.network}}</code></pre>
+                                          </div>
+                                        </details>
+                                      </td>
+                                    </tr>
+                                    <tr class="hover">
+                                      <td>Valid while</td>
+                                      <td>
+                                        <details class="collapse collapse-arrow bg-base-200" open>
+                                          <summary class="collapse-title text-success">Click to open/close large content</summary>
+                                          <div class="collapse-content">
+                                            <pre><code class="text-secondary break-all">{{body.preconditions.validWhile}}</code></pre>
+                                          </div>
+                                        </details>
+                                      </td>
+                                    </tr>
+                                  {{/body.preconditions}}
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                {{/txn.zkappCommand.accountUpdates}}
+                {{#txn.id}}
+                  <tr class="hover">
+                    <td>Transaction Id</td>
+                    <td>
+                      <details class="collapse collapse-arrow bg-base-200">
+                        <summary class="collapse-title text-success">Click to open/close large content</summary>
+                        <div class="collapse-content">
+                          <code class="text-secondary break-all">{{txn.id}}</code>
+                        </div>
+                      </details>
+                    </td>
+                  </tr>
+                {{/txn.id}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script id="noPageDataTemplate" type="x-tmpl-mustache">
+      <div class="flex justify-center m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[55%]">
+          <div class="card-body text-center">
+            <h1 class="text-2xl underline">{{header}}</h1>
+            <h2 class="text-l">No data available</h2>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script id="noPartialDataTemplate" type="x-tmpl-mustache">
+      <div>
+        <h1 class="text-xl underline">{{header}}</h1>
+        <h2 class="text-l">No data available</h2>
+      </div>
+    </script>
+
+    <script src="./js/tailwindcss.js"></script>
+    <script src="./js/mustache.js"></script>
+    <script src="./js/constants.js"></script>
+    <script src="./js/base-x.js"></script>
+    <script src="./js/app.js"></script>
+  </body>
+</html>
