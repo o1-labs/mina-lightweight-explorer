@@ -165,7 +165,7 @@
           <h2 class="text-xl mb-2 border-b-2 border-base-100">
             Recent blocks
           </h2>
-          <div id="recentBlocksContent">
+          <div id="recentBlocksContent" class="overflow-auto">
             <span class="text-stone-700">No data available yet</span>
           </div>
           <div id="recentBlocksContentLoader"></div>
@@ -177,7 +177,7 @@
               <h2 class="text-xl mb-2 border-b-2 border-base-100">
                 Mempool value transfer transactions
               </h2>
-              <div id="valueTransfersMempoolContent">
+              <div id="valueTransfersMempoolContent" class="overflow-auto">
                 <span class="text-stone-700">No data available yet</span>
               </div>
               <div id="valueTransfersMempoolContentLoader"></div>
@@ -187,7 +187,7 @@
               <h2 class="text-xl mb-2 border-b-2 border-base-100">
                 Mempool zkApp transactions
               </h2>
-              <div id="zkAppsMempoolContent">
+              <div id="zkAppsMempoolContent" class="overflow-auto">
                 <span class="text-stone-700">No data available yet</span>
               </div>
               <div id="zkAppsMempoolContentLoader"></div>
@@ -197,8 +197,8 @@
       </div>
     </script>
     <script id="settingsTemplate" type="x-tmpl-mustache">
-      <div class="flex justify-center m-10">
-        <div class="card shadow-2xl bg-base-100 md:w-[25%]">
+      <div class="flex justify-center md:m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[50%] overflow-auto">
           <form class="card-body">
             <div class="form-control">
               <label class="label" for="psqlConnectionString">
@@ -444,8 +444,8 @@
       </div>
     </script>
     <script id="blockDetailsTemplate" type="x-tmpl-mustache">
-      <div class="flex justify-center m-10">
-        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+      <div class="flex justify-center md:m-10">
+        <div class="card shadow-2xl bg-base-100 w-full md:w-[65%] overflow-auto">
           <div class="card-body">
             <h1 class="text-2xl underline">Block details</h1>
             <div class="divider"></div>
@@ -586,8 +586,8 @@
       </div>
     </script>
     <script id="accountsDetailsTemplate" type="x-tmpl-mustache">
-      <div class="flex justify-center m-10">
-        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+      <div class="flex justify-center md:m-10">
+        <div class="card shadow-2xl bg-base-100 w-full md:w-[65%] overflow-auto">
           <div class="card-body">
             <h1 class="text-2xl underline">Accounts details</h1>
             {{#accounts}}
@@ -863,12 +863,12 @@
       </div>
     </script>
     <script id="daemonStatusTemplate" type="x-tmpl-mustache">
-      <div class="flex justify-center m-10">
-        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+      <div class="flex justify-center md:m-10">
+        <div class="card shadow-2xl bg-base-100 w-full md:w-[65%] overflow-auto">
           <div class="card-body">
             <h1 class="text-2xl underline">Daemon status</h1>
             <div class="divider"></div>
-            <div class="stats shadow mt-4 md:w-[50%] bg-base-200">
+            <div class="stats shadow mt-4 md:w-[50%] bg-base-200 overflow-auto">
               <div class="stat">
                 <div class="stat-title text-sm">Block height</div>
                 <div class="stat-value text-sm">{{protocolState.consensusState.blockHeight}}</div>
@@ -1224,8 +1224,8 @@
       </div>
     </script>
     <script id="valueTransferTemplate" type="x-tmpl-mustache">
-      <div class="flex justify-center m-10">
-        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+      <div class="flex justify-center md:m-10">
+        <div class="card shadow-2xl bg-base-100 w-full md:w-[65%] overflow-auto">
           <div class="card-body">
             <h1 class="text-2xl underline">Value transfer transaction details</h1>
             <div class="divider"></div>
@@ -1345,8 +1345,8 @@
       </div>
     </script>
     <script id="zkAppTemplate" type="x-tmpl-mustache">
-      <div class="flex justify-center m-10">
-        <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+      <div class="flex justify-center md:m-10">
+        <div class="card shadow-2xl bg-base-100 w-full md:w-[65%] overflow-auto">
           <div class="card-body">
             <div class="flex justify-between">
               <h1 class="text-2xl underline">zkApp transaction details</h1>
@@ -1869,8 +1869,8 @@
       </div>
     </script>
     <script id="noPageDataTemplate" type="x-tmpl-mustache">
-      <div class="flex justify-center m-10">
-        <div class="card shadow-2xl bg-base-100 md:w-[55%]">
+      <div class="flex justify-center md:m-10">
+        <div class="card shadow-2xl bg-base-100 md:w-[55%] overflow-auto">
           <div class="card-body text-center">
             <h1 class="text-2xl underline">{{header}}</h1>
             <h2 class="text-l">No data available</h2>

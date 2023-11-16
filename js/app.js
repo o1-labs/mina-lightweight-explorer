@@ -189,8 +189,8 @@
   function showSkeletonLoader(htmlElementId) {
     const htmlElement = document.getElementById(htmlElementId);
     htmlElement.innerHTML = `
-    <div class="flex justify-center m-10">
-      <div class="card shadow-2xl bg-base-100 md:w-[60%]">
+    <div class="flex justify-center md:m-10">
+      <div class="card shadow-2xl bg-base-100 w-full md:w-[65%]">
         <div class="card-body">
           <div class="flex flex-col gap-2 w-full">
             <div class="flex gap-4 items-center w-full">
