@@ -157,6 +157,55 @@
         </div>
       </div>
     </dialog>
+    <dialog id="unlockAccountDialog" class="modal">
+      <div class="modal-box">
+        <form method="dialog">
+          <button
+            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          >
+            ✕
+          </button>
+        </form>
+        <h3 class="font-bold text-lg">Unlock account</h3>
+        <p class="py-4">
+          Useful if you want to issue value transfer transactions with this
+          account
+        </p>
+        <div class="w-full">
+          <div
+            id="accountUnlockFailedAlert"
+            class="mb-4 alert alert-error hidden"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>Account is not unlocked!</span>
+          </div>
+          <div class="gap-2">
+            <input
+              id="accountPassphrase"
+              type="text"
+              placeholder="Account passphrase"
+              class="input input-primary w-full"
+              autofocus
+            />
+            <button id="unlockAccountButton" class="btn btn-primary my-2">
+              Unlock
+            </button>
+          </div>
+        </div>
+      </div>
+    </dialog>
 
     <!-- Templates -->
     <script id="rootTemplate" type="x-tmpl-mustache">
@@ -235,6 +284,17 @@
                 placeholder="Length of content to be ellipsified"
                 class="input input-primary"
                 value="10" />
+            </div>
+            <div class="form-control">
+              <label class="label" for="accountsCommonPassphrase">
+                <span class="label-text">Accounts common passphrase</span>
+              </label>
+              <input
+                id="accountsCommonPassphrase"
+                type="text"
+                placeholder="Accounts common passphrase"
+                class="input input-primary"
+                value="naughty blue worm" />
             </div>
             <div class="form-control">
               <label class="label" for="themeSwitcher">
@@ -589,7 +649,14 @@
       <div class="flex justify-center md:m-10">
         <div class="card shadow-2xl bg-base-100 w-full md:w-[65%] overflow-auto">
           <div class="card-body">
-            <h1 class="text-2xl underline">Accounts details</h1>
+            <div class="flex justify-between">
+              <h1 class="text-2xl underline">Accounts details</h1>
+              {{#isGloballyLocked}}
+                <button class="btn btn-primary btn-outline" onclick="unlockAccountDialog.showModal()">
+                  Unlock account
+                </button>
+              {{/isGloballyLocked}}
+            </div>
             {{#accounts}}
               <div class="divider"></div>
               <div>
@@ -605,7 +672,7 @@
                 <tbody>
                   <tr class="hover">
                     <td>Public key</td>
-                    <td><code class="text-success">{{publicKey}}</code></td>
+                    <td><code id="accountPublicKey" class="text-success">{{publicKey}}</code></td>
                   </tr>
                   <tr class="hover">
                     <td>Index</td>
@@ -718,7 +785,7 @@
                   {{#locked}}
                     <tr class="hover">
                       <td>Is locked?</td>
-                      <td><div class="badge badge-ghost">{{locked}}</div></td>
+                      <td><div class="badge badge-secondary">{{locked}}</div></td>
                     </tr>
                   {{/locked}}
                   {{#zkappState}}
@@ -1350,7 +1417,7 @@
           <div class="card-body">
             <div class="flex justify-between">
               <h1 class="text-2xl underline">zkApp transaction details</h1>
-              <button id="toggleLargeContent" class="btn btn-primary btn-outline">Expand all</button>
+              <button id="toggleLargeContentButton" class="btn btn-primary btn-outline">Expand all</button>
             </div>
             <div class="divider"></div>
             <table class="table table-pin-rows table-pin-cols">

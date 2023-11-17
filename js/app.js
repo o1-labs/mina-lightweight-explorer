@@ -9,6 +9,9 @@
     "minaExplorerAutoUpdateInterval"
   );
   const ellipsifyLength = localStorage.getItem("minaExplorerEllipsifyLength");
+  const accountsCommonPassphrase = localStorage.getItem(
+    "minaExplorerAccountsCommonPassphrase"
+  );
   const selectedTheme = localStorage.getItem("minaExplorerSelectedTheme");
   const urlSearchParams = new URLSearchParams(window.location.search);
   let currentPage = "N/A";
@@ -28,6 +31,7 @@
     !selectedGraphQlEndpoint ||
     !autoUpdateInterval ||
     !ellipsifyLength ||
+    !accountsCommonPassphrase ||
     !selectedTheme
   ) {
     configureDefaults();
@@ -123,6 +127,7 @@
         urlSearchParams.get("publicKey"),
         "pageContent"
       );
+      addAccountDetailsPageEventListeners();
       break;
     }
     case "transaction": {
@@ -157,7 +162,6 @@
   updateBreadcrumbItems({ text: currentPage });
 
   // Initial recurring calls
-
   setTimeout(basicNetworkStateHandler, 500);
   if (document.getElementById("recentBlocksContent")) {
     setTimeout(recentBlocksHandler, 500);
@@ -241,6 +245,10 @@
     );
     localStorage.setItem("minaExplorerAutoUpdateInterval", 10);
     localStorage.setItem("minaExplorerEllipsifyLength", 10);
+    localStorage.setItem(
+      "minaExplorerAccountsCommonPassphrase",
+      "naughty blue worm"
+    );
     localStorage.setItem("minaExplorerSelectedTheme", "dark");
     window.location.reload();
   }
@@ -276,6 +284,9 @@
       "minaExplorerAutoUpdateInterval"
     );
     const ellipsifyLength = localStorage.getItem("minaExplorerEllipsifyLength");
+    const accountsCommonPassphrase = localStorage.getItem(
+      "minaExplorerAccountsCommonPassphrase"
+    );
     const selectedTheme = localStorage.getItem("minaExplorerSelectedTheme");
     const psqlConnectionStringInput = document.getElementById(
       "psqlConnectionString"
@@ -283,13 +294,15 @@
     const autoUpdateIntervalInput =
       document.getElementById("autoUpdateInterval");
     const ellipsifyLengthInput = document.getElementById("ellipsifyLength");
+    const accountsCommonPassphraseInput = document.getElementById(
+      "accountsCommonPassphrase"
+    );
     const themeSwitcher = document.getElementById("themeSwitcher");
 
-    if (psqlConnectionString) {
-      psqlConnectionStringInput.value = psqlConnectionString;
-    }
+    psqlConnectionStringInput.value = psqlConnectionString;
     autoUpdateIntervalInput.value = autoUpdateInterval;
     ellipsifyLengthInput.value = ellipsifyLength;
+    accountsCommonPassphraseInput.value = accountsCommonPassphrase;
     themeSwitcher.innerHTML = "";
     for (const theme of themes) {
       const option = document.createElement("option");
@@ -309,6 +322,9 @@
     const autoUpdateIntervalInput =
       document.getElementById("autoUpdateInterval");
     const ellipsifyLengthInput = document.getElementById("ellipsifyLength");
+    const accountsCommonPassphraseInput = document.getElementById(
+      "accountsCommonPassphrase"
+    );
     const themeSwitcher = document.getElementById("themeSwitcher");
 
     psqlConnectionStringInput.addEventListener("keyup", function () {
@@ -320,16 +336,61 @@
     ellipsifyLengthInput.addEventListener("change", function () {
       localStorage.setItem("minaExplorerEllipsifyLength", this.value);
     });
+    accountsCommonPassphraseInput.addEventListener("change", function () {
+      localStorage.setItem("minaExplorerAccountsCommonPassphrase", this.value);
+    });
     themeSwitcher.addEventListener("change", function () {
       localStorage.setItem("minaExplorerSelectedTheme", this.value);
       updateTheme(this.value);
     });
   }
 
+  function addAccountDetailsPageEventListeners() {
+    const unlockAccountButton = document.getElementById("unlockAccountButton");
+    const accountPublicKey = document.getElementById("accountPublicKey");
+    const accountPassphrase = document.getElementById("accountPassphrase");
+
+    if (accountPassphrase) {
+      const accountsCommonPassphrase = localStorage.getItem(
+        "minaExplorerAccountsCommonPassphrase"
+      );
+      accountPassphrase.value = accountsCommonPassphrase;
+      accountPassphrase.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          document.getElementById("unlockAccountButton").click();
+        }
+      });
+    }
+    if (unlockAccountButton && accountPublicKey) {
+      unlockAccountButton.addEventListener("click", async function () {
+        showLoader("unlockAccountButton");
+        await sleep();
+        const unlockedAccount = await fetchGraphQlData(
+          getAccountUnlockGraphQlQuery(
+            accountPublicKey.innerText,
+            accountPassphrase.value
+          )
+        );
+        if (!unlockedAccount) {
+          document
+            .getElementById("accountUnlockFailedAlert")
+            .classList.remove("hidden");
+          accountPassphrase.focus();
+          unlockAccountButton.innerText = "Unlock";
+          return;
+        }
+        window.location.reload();
+      });
+    }
+  }
+
   function addZkAppTxnDetailsPageEventListeners() {
-    const toggleLargeContent = document.getElementById("toggleLargeContent");
-    if (toggleLargeContent) {
-      toggleLargeContent.addEventListener("click", function () {
+    const toggleLargeContentButton = document.getElementById(
+      "toggleLargeContentButton"
+    );
+    if (toggleLargeContentButton) {
+      toggleLargeContentButton.addEventListener("click", function () {
         const buttonText = this.innerText;
         const detailsHtmlElements = document
           .getElementById("pageContent")
@@ -647,6 +708,8 @@
       }
       renderTemplate("accountsDetailsTemplate", containerId, {
         accounts,
+        isGloballyLocked:
+          accounts.find((account) => account.locked) !== undefined,
         amountView: function () {
           return function (text, render) {
             return nanoMinaToMina(render(text));
