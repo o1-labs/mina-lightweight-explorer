@@ -347,7 +347,7 @@
 
   function addAccountDetailsPageEventListeners() {
     const unlockAccountButton = document.getElementById("unlockAccountButton");
-    const accountPublicKey = document.getElementById("accountPublicKey");
+    const accountPublicKey = urlSearchParams.get("publicKey");
     const accountPassphrase = document.getElementById("accountPassphrase");
 
     if (accountPassphrase) {
@@ -368,7 +368,7 @@
         await sleep();
         const unlockedAccount = await fetchGraphQlData(
           getAccountUnlockGraphQlQuery(
-            accountPublicKey.innerText,
+            accountPublicKey,
             accountPassphrase.value
           )
         );
