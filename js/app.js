@@ -346,6 +346,7 @@
   }
 
   function addAccountDetailsPageEventListeners() {
+    const lockAccountButton = document.getElementById("lockAccountButton");
     const unlockAccountButton = document.getElementById("unlockAccountButton");
     const accountPublicKey = urlSearchParams.get("publicKey");
     const accountPassphrase = document.getElementById("accountPassphrase");
@@ -381,6 +382,18 @@
           return;
         }
         window.location.reload();
+      });
+    }
+    if (lockAccountButton && accountPublicKey) {
+      lockAccountButton.addEventListener("click", async function () {
+        showLoader("lockAccountButton");
+        await sleep();
+        const lockedAccount = await fetchGraphQlData(
+          getAccountLockGraphQlQuery(accountPublicKey)
+        );
+        if (lockedAccount) {
+          window.location.reload();
+        }
       });
     }
   }

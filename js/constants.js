@@ -758,6 +758,20 @@ const extendedRecentBlocksGraphQlQuery = {
   variables: null,
   operationName: null,
 };
+const getAccountLockGraphQlQuery = function (publicKey) {
+  return {
+    query: `mutation {
+      lockAccount(input: {publicKey: "${publicKey}"}) {
+        account {
+          publicKey
+        }
+      }
+    }
+  `,
+    variables: null,
+    operationName: null,
+  };
+};
 const getAccountUnlockGraphQlQuery = function (publicKey, passPhrase) {
   return {
     query: `mutation {
