@@ -5,6 +5,9 @@
   const graphQlEndpoints = JSON.parse(
     localStorage.getItem("minaExplorerGraphQlEndpoints")
   );
+  const psqlConnectionString = localStorage.getItem(
+    "minaExplorerPsqlConnectionString"
+  );
   const autoUpdateInterval = localStorage.getItem(
     "minaExplorerAutoUpdateInterval"
   );
@@ -29,6 +32,7 @@
   if (
     !graphQlEndpoints ||
     !selectedGraphQlEndpoint ||
+    !psqlConnectionString ||
     !autoUpdateInterval ||
     !ellipsifyLength ||
     !accountsCommonPassphrase ||
@@ -243,13 +247,17 @@
       "minaExplorerSelectedGraphQlEndpoint",
       defaultGraphQlEndpoints[0]
     );
+    localStorage.setItem(
+      "minaExplorerPsqlConnectionString",
+      "postgresql://postgres:postgres@localhost:5432/archive"
+    );
     localStorage.setItem("minaExplorerAutoUpdateInterval", 10);
     localStorage.setItem("minaExplorerEllipsifyLength", 10);
     localStorage.setItem(
       "minaExplorerAccountsCommonPassphrase",
       "naughty blue worm"
     );
-    localStorage.setItem("minaExplorerSelectedTheme", "dark");
+    localStorage.setItem("minaExplorerSelectedTheme", "sunset");
     window.location.reload();
   }
 
@@ -336,7 +344,7 @@
     ellipsifyLengthInput.addEventListener("change", function () {
       localStorage.setItem("minaExplorerEllipsifyLength", this.value);
     });
-    accountsCommonPassphraseInput.addEventListener("change", function () {
+    accountsCommonPassphraseInput.addEventListener("keyup", function () {
       localStorage.setItem("minaExplorerAccountsCommonPassphrase", this.value);
     });
     themeSwitcher.addEventListener("change", function () {
