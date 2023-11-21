@@ -28,6 +28,7 @@
     "targetGraphQlEndpoint"
   );
   const searchButton = document.getElementById("searchButton");
+  const appVersion = document.getElementById("appVersion");
 
   if (
     !graphQlEndpoints ||
@@ -112,6 +113,9 @@
         document.getElementById("searchQuery").focus();
       }
     });
+  }
+  if (appVersion) {
+    appVersion.innerText = applicationVersion;
   }
 
   configureGraphQlEndpoints();
