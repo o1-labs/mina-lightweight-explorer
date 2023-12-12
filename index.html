@@ -353,7 +353,12 @@
                     <div class="badge badge-ghost">{{commandTransactionCount}}</div>
                   {{/commandTransactionCount}}
                   {{#commandTransactionCount}}
-                    <div class="badge badge-primary badge-outline">{{commandTransactionCount}}</div>
+                    {{^hasFailedTxn}}
+                      <div class="badge badge-primary badge-outline">{{commandTransactionCount}}</div>
+                    {{/hasFailedTxn}}
+                    {{#hasFailedTxn}}
+                      <div class="badge badge-error badge-outline">{{commandTransactionCount}}</div>
+                    {{/hasFailedTxn}}
                   {{/commandTransactionCount}}
                 </td>
               </tr>
@@ -402,9 +407,17 @@
             {{#valueTransfers}}
               <tr class="hover">
                 <td title="{{hash}}">
-                  <div class="badge badge-primary badge-outline">
-                    <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">{{hashView}}</a>
-                  </div>
+                  {{^failureReason}}
+                    <div class="badge badge-primary badge-outline">
+                      <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
+                  {{/failureReason}}
+                  {{#failureReason}}
+                    <div class="badge badge-error badge-outline">
+                      <a class="link link-error" href="./index.html?target=transaction&hash={{hash}}" target="_self">
+                  {{/failureReason}}
+                        {{hashView}}
+                      </a>
+                    </div>
                 </td>
                 <td title="{{feePayer.publicKey}}">
                   <div class="badge badge-secondary badge-outline">
@@ -465,9 +478,17 @@
             {{#zkApps}}
               <tr class="hover">
                 <td title="{{hash}}">
-                  <div class="badge badge-primary badge-outline">
-                    <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">{{hashView}}</a>
-                  </div>
+                  {{^failureReason}}
+                    <div class="badge badge-primary badge-outline">
+                      <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
+                  {{/failureReason}}
+                  {{#failureReason}}
+                    <div class="badge badge-error badge-outline">
+                      <a class="link link-error" href="./index.html?target=transaction&hash={{hash}}" target="_self">
+                  {{/failureReason}}
+                        {{hashView}}
+                      </a>
+                    </div>
                 </td>
                 <td title="{{zkappCommand.feePayer.body.publicKey}}">
                   <div class="badge badge-secondary badge-outline">
@@ -1328,7 +1349,11 @@
                 </tr>
                 {{#txn.failureReason}}
                   <tr class="hover">
-                    <td>Failure reason</td>
+                    <td>
+                      <div class="badge badge-error badge-outline">
+                        Failure reason
+                      </div>
+                    </td>
                     <td><code class="text-error">{{txn.failureReason}}</code></td>
                   </tr>
                 {{/txn.failureReason}}
@@ -1452,7 +1477,11 @@
                 </tr>
                 {{#isFailedTxn}}
                   <tr class="hover">
-                    <td>Failure reasons</td>
+                    <td>
+                      <div class="badge badge-error badge-outline">
+                        Failure reason
+                      </div>
+                    </td>
                     <td>
                       <table class="table table-zebra table-pin-rows table-pin-cols bg-base-100">
                         <thead>

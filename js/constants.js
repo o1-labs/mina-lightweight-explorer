@@ -1,5 +1,5 @@
 // Update application version for every new release
-const applicationVersion = "v0.1.3";
+const applicationVersion = "v0.1.4";
 
 const timeZoneOffset = new Date().getTimezoneOffset() * 60000;
 const minaTokenId = "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf";
@@ -89,6 +89,17 @@ const basicRecentBlocksGraphQlQuery = {
       }
       commandTransactionCount
       stateHash
+      transactions {
+        userCommands {
+          failureReason
+        }
+        zkappCommands {
+          failureReason {
+            failures
+            index
+          }
+        }
+      }
     }
   }`,
   variables: null,
@@ -177,6 +188,7 @@ const getBlockDetailsGraphQlQuery = function (numberOrHash) {
             type
           }
           userCommands {
+            failureReason
             feePayer {
               publicKey
             }
@@ -190,6 +202,10 @@ const getBlockDetailsGraphQlQuery = function (numberOrHash) {
             hash
           }
           zkappCommands {
+            failureReason {
+              failures
+              index
+            }
             hash
             zkappCommand {
               feePayer {

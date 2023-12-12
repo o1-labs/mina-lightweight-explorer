@@ -520,6 +520,7 @@
     await sleep();
     const recentBlocks = await fetchGraphQlData(basicRecentBlocksGraphQlQuery);
     if (recentBlocks) {
+      updateBlocksWithFailedTxnMark(recentBlocks.bestChain);
       renderTemplate("recentBlocksTemplate", "recentBlocksContent", {
         recentBlocks: recentBlocks.bestChain.reverse(),
         blocksCounter: recentBlocks.bestChain.length,
@@ -1091,5 +1092,22 @@
       decodedMessage.slice(2, decodedMessage.length - 4)
     );
     return decodedString.replace(nullValueRegex, "");
+  }
+
+  function updateBlocksWithFailedTxnMark(blocks) {
+    for (const block of blocks) {
+      if (
+        block.transactions.userCommands.find(
+          (txn) => txn.failureReason !== null
+        ) ||
+        block.transactions.zkappCommands.find(
+          (txn) => txn.failureReason !== null
+        )
+      ) {
+        block.hasFailedTxn = true;
+      } else {
+        block.hasFailedTxn = false;
+      }
+    }
   }
 })();
