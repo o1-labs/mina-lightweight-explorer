@@ -478,14 +478,14 @@
             {{#zkApps}}
               <tr class="hover">
                 <td title="{{hash}}">
-                  {{^failureReason}}
+                  {{^isFailedTxn}}
                     <div class="badge badge-primary badge-outline">
                       <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
-                  {{/failureReason}}
-                  {{#failureReason}}
+                  {{/isFailedTxn}}
+                  {{#isFailedTxn}}
                     <div class="badge badge-error badge-outline">
                       <a class="link link-error" href="./index.html?target=transaction&hash={{hash}}" target="_self">
-                  {{/failureReason}}
+                  {{/isFailedTxn}}
                         {{hashView}}
                       </a>
                     </div>
