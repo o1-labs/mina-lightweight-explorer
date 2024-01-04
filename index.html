@@ -797,18 +797,22 @@
                     <td>Token Id</td>
                     <td><code class="text-success">{{tokenId}}</code></td>
                   </tr>
-                  <tr class="hover">
-                    <td>Token symbol</td>
-                    <td><code class="text-success">{{tokenSymbol}}</code></td>
-                  </tr>
-                  <tr class="hover">
-                    <td>zkApp URI</td>
-                    <td>
-                      <div class="badge badge-secondary badge-outline">
-                        <a class="link link-secondary" href="{{zkappUri}}" target="_blank">{{zkappUri}}</a>
-                      </div>
-                    </td>
-                  </tr>
+                  {{#tokenSymbol}}
+                    <tr class="hover">
+                      <td>Token symbol</td>
+                      <td><code class="text-success">{{tokenSymbol}}</code></td>
+                    </tr>
+                  {{/tokenSymbol}}
+                  {{#zkappUri}}
+                    <tr class="hover">
+                      <td>zkApp URI</td>
+                      <td>
+                        <div class="badge badge-secondary badge-outline">
+                          <a class="link link-secondary" href="{{zkappUri}}" target="_blank">{{zkappUri}}</a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/zkappUri}}
                   {{#locked}}
                     <tr class="hover">
                       <td>Is locked?</td>

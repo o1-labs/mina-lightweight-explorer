@@ -708,13 +708,18 @@
             getTokenDetailsGraphQlQuery(account.tokenId)
           );
           if (tokenDetails.tokenOwner) {
-            const tokenOwnerSymbol =
-              tokenDetails.tokenOwner.tokenSymbol ?? "N/A";
+            const tokenOwnerSymbol = isEmptyString(
+              tokenDetails.tokenOwner.tokenSymbol
+            )
+              ? "[No data]"
+              : tokenDetails.tokenOwner.tokenSymbol;
             account.tokenSymbol =
               account.tokenId === minaTokenId
                 ? `${tokenOwnerSymbol} (MINA)`
                 : tokenOwnerSymbol;
-            account.zkappUri = tokenDetails.tokenOwner.zkappUri ?? "N/A";
+            account.zkappUri = isEmptyString(tokenDetails.tokenOwner.zkappUri)
+              ? "[No data]"
+              : tokenDetails.tokenOwner.zkappUri;
           } else {
             account.tokenSymbol =
               account.tokenId === minaTokenId
@@ -1109,5 +1114,9 @@
         block.hasFailedTxn = false;
       }
     }
+  }
+
+  function isEmptyString(value) {
+    return !value || value.length === 0;
   }
 })();
