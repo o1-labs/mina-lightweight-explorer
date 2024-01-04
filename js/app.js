@@ -608,6 +608,9 @@
   }
 
   function renderZkAppsList(header, zkApps, containerId) {
+    for (const zkApp of zkApps) {
+      zkApp.isFailedTxn = zkApp.failureReason?.length > 0;
+    }
     renderTemplate("zkAppsListTemplate", containerId, {
       header,
       zkApps,
