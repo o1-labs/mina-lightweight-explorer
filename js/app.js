@@ -319,6 +319,7 @@
       console.log("Invalid custom GraphQL endpoint or it already exists!");
     }
   }
+
   function configureGraphQlEndpoints() {
     const selectedGraphQlEndpoint = localStorage.getItem(
       "minaExplorerSelectedGraphQlEndpoint"
