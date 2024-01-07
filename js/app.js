@@ -118,6 +118,7 @@
     appVersion.innerText = applicationVersion;
   }
 
+  configureCustomGraphQlEndpoint();
   configureGraphQlEndpoints();
 
   switch (urlSearchParams.get("target")) {
@@ -235,7 +236,7 @@
   }
 
   function configureDefaults() {
-    const defaultGraphQlEndpoints = [
+    let defaultGraphQlEndpoints = [
       "http://localhost:8080/graphql",
       "http://localhost:3085/graphql",
       "http://localhost:4001/graphql",
@@ -243,6 +244,24 @@
       "http://localhost:5001/graphql",
       "http://localhost:6001/graphql",
     ];
+    let customGraphQlEndpoint = null;
+    try {
+      customGraphQlEndpoint = new URL(
+        urlSearchParams.get("customGraphQlEndpoint")
+      ).toString();
+    } catch (e) {
+      // Ignore
+    }
+    if (
+      customGraphQlEndpoint &&
+      !defaultGraphQlEndpoints.includes(customGraphQlEndpoint)
+    ) {
+      defaultGraphQlEndpoints = [customGraphQlEndpoint].concat(
+        defaultGraphQlEndpoints
+      );
+    } else {
+      console.log("Invalid custom GraphQL endpoint or it already exists!");
+    }
     localStorage.setItem(
       "minaExplorerGraphQlEndpoints",
       JSON.stringify(defaultGraphQlEndpoints)
@@ -269,6 +288,37 @@
     document.querySelector("html").setAttribute("data-theme", theme);
   }
 
+  function configureCustomGraphQlEndpoint() {
+    let customGraphQlEndpoint = null;
+    try {
+      customGraphQlEndpoint = new URL(
+        urlSearchParams.get("customGraphQlEndpoint")
+      ).toString();
+    } catch (e) {
+      console.log("Invalid custom GraphQL endpoint!");
+      return;
+    }
+    let graphQlEndpoints = JSON.parse(
+      localStorage.getItem("minaExplorerGraphQlEndpoints")
+    );
+    if (
+      customGraphQlEndpoint &&
+      !graphQlEndpoints.includes(customGraphQlEndpoint)
+    ) {
+      graphQlEndpoints = [customGraphQlEndpoint].concat(graphQlEndpoints);
+      localStorage.setItem(
+        "minaExplorerGraphQlEndpoints",
+        JSON.stringify(graphQlEndpoints)
+      );
+      localStorage.setItem(
+        "minaExplorerSelectedGraphQlEndpoint",
+        customGraphQlEndpoint
+      );
+      window.location.reload();
+    } else {
+      console.log("Invalid custom GraphQL endpoint or it already exists!");
+    }
+  }
   function configureGraphQlEndpoints() {
     const selectedGraphQlEndpoint = localStorage.getItem(
       "minaExplorerSelectedGraphQlEndpoint"
