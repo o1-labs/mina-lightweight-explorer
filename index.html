@@ -1096,15 +1096,15 @@
                       </thead>
                       <tbody>
                         <tr class="hover">
-                          <td>Bind IP</td>
-                          <td><div class="badge badge-ghost">{{daemonStatus.addrsAndPorts.bindIp}}</div></td>
+                          <td>Bind address</td>
+                          <td><div class="badge badge-ghost">{{daemonStatus.addrsAndPorts.bindIp}}:{{daemonStatus.addrsAndPorts.clientPort}}</div></td>
                         </tr>
                         <tr class="hover">
-                          <td>External IP</td>
-                          <td><div class="badge badge-ghost">{{daemonStatus.addrsAndPorts.externalIp}}</div></td>
+                          <td>External address</td>
+                          <td><div class="badge badge-ghost">{{daemonStatus.addrsAndPorts.externalIp}}:{{daemonStatus.addrsAndPorts.libp2pPort}}</div></td>
                         </tr>
                         <tr class="hover">
-                          <td>Libp2p</td>
+                          <td>Libp2p address</td>
                           <td><code class="text-secondary">
                             {{daemonStatus.addrsAndPorts.peer.peerId}}@{{daemonStatus.addrsAndPorts.peer.host}}:{{daemonStatus.addrsAndPorts.peer.libp2pPort}}
                           </code></td>
@@ -1231,9 +1231,11 @@
                         </thead>
                         <tbody>
                           {{#daemonStatus.peers}}
-                            <td>
-                              <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
-                            </td>
+                            <tr class="hover">
+                              <td>
+                                <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
+                              </td>
+                            </tr>
                           {{/daemonStatus.peers}}
                         </tbody>
                       </table>
@@ -1252,9 +1254,11 @@
                         </thead>
                         <tbody>
                           {{#connectionGatingConfig.trustedPeers}}
-                            <td>
-                              <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
-                            </td>
+                            <tr class="hover">
+                              <td>
+                                <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
+                              </td>
+                            </tr>
                           {{/connectionGatingConfig.trustedPeers}}
                         </tbody>
                       </table>
@@ -1273,9 +1277,11 @@
                         </thead>
                         <tbody>
                           {{#connectionGatingConfig.bannedPeers}}
-                            <td>
-                              <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
-                            </td>
+                            <tr class="hover">
+                              <td>
+                                <code class="text-secondary">{{peerId}}@{{host}}:{{libp2pPort}}</code>
+                              </td>
+                            </tr>
                           {{/connectionGatingConfig.bannedPeers}}
                         </tbody>
                       </table>
