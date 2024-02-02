@@ -790,6 +790,13 @@
         if (account.delegators?.length > 0) {
           account.delegators = jsonAccountsToHtml(account.delegators);
         }
+        if (account.permissions.setVerificationKey) {
+          account.permissions.setVerificationKey = JSON.stringify(
+            account.permissions.setVerificationKey,
+            null,
+            2
+          );
+        }
       }
       renderTemplate("accountsDetailsTemplate", containerId, {
         accounts,
