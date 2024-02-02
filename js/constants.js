@@ -268,7 +268,10 @@ const getAccountsDetailsGraphQlQuery = function (publicKey) {
           setDelegate
           setPermissions
           setTokenSymbol
-          setVerificationKey
+          setVerificationKey {
+            auth
+            txnVersion
+          }
           setVotingFor
           setZkappUri
           setTiming
@@ -537,7 +540,10 @@ const extendedMempoolGraphQlQuery = {
                 setPermissions
                 setTokenSymbol
                 setVotingFor
-                setVerificationKey
+                setVerificationKey {
+                  auth
+                  txnVersion
+                }
                 setZkappUri
                 access
                 setTiming
@@ -735,7 +741,10 @@ const extendedRecentBlocksGraphQlQuery = {
                     setPermissions
                     setTokenSymbol
                     setVotingFor
-                    setVerificationKey
+                    setVerificationKey {
+                      auth
+                      txnVersion
+                    }
                     setZkappUri
                     access
                     setTiming
