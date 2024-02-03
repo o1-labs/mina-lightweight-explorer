@@ -338,7 +338,12 @@
           </thead>
           <tbody>
             {{#recentBlocks}}
+            {{^hasFailedTxn}}
               <tr class="hover">
+            {{/hasFailedTxn}}
+            {{#hasFailedTxn}}
+              <tr class="!bg-red-600">
+            {{/hasFailedTxn}}
                 <td><div class="badge badge-ghost">{{dateView}}</div></td>
                 <td title="{{stateHash}}">
                   <div class="badge badge-primary badge-outline">
@@ -353,12 +358,7 @@
                     <div class="badge badge-ghost">{{commandTransactionCount}}</div>
                   {{/commandTransactionCount}}
                   {{#commandTransactionCount}}
-                    {{^hasFailedTxn}}
-                      <div class="badge badge-primary badge-outline">{{commandTransactionCount}}</div>
-                    {{/hasFailedTxn}}
-                    {{#hasFailedTxn}}
-                      <div class="badge badge-error badge-outline">{{commandTransactionCount}}</div>
-                    {{/hasFailedTxn}}
+                    <div class="badge badge-primary badge-outline">{{commandTransactionCount}}</div>
                   {{/commandTransactionCount}}
                 </td>
               </tr>
@@ -405,19 +405,18 @@
           </thead>
           <tbody>
             {{#valueTransfers}}
+            {{^failureReason}}
               <tr class="hover">
+            {{/failureReason}}
+            {{#failureReason}}
+              <tr class="!bg-red-600">
+            {{/failureReason}}
                 <td title="{{hash}}">
-                  {{^failureReason}}
-                    <div class="badge badge-primary badge-outline">
-                      <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
-                  {{/failureReason}}
-                  {{#failureReason}}
-                    <div class="badge badge-error badge-outline">
-                      <a class="link link-error" href="./index.html?target=transaction&hash={{hash}}" target="_self">
-                  {{/failureReason}}
-                        {{hashView}}
-                      </a>
-                    </div>
+                  <div class="badge badge-primary badge-outline">
+                    <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
+                      {{hashView}}
+                    </a>
+                  </div>
                 </td>
                 <td title="{{feePayer.publicKey}}">
                   <div class="badge badge-secondary badge-outline">
@@ -476,19 +475,18 @@
           </thead>
           <tbody>
             {{#zkApps}}
+            {{^isFailedTxn}}
               <tr class="hover">
+            {{/isFailedTxn}}
+            {{#isFailedTxn}}
+              <tr class="!bg-red-600">
+            {{/isFailedTxn}}
                 <td title="{{hash}}">
-                  {{^isFailedTxn}}
-                    <div class="badge badge-primary badge-outline">
-                      <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
-                  {{/isFailedTxn}}
-                  {{#isFailedTxn}}
-                    <div class="badge badge-error badge-outline">
-                      <a class="link link-error" href="./index.html?target=transaction&hash={{hash}}" target="_self">
-                  {{/isFailedTxn}}
-                        {{hashView}}
-                      </a>
-                    </div>
+                  <div class="badge badge-primary badge-outline">
+                    <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
+                      {{hashView}}
+                    </a>
+                  </div>
                 </td>
                 <td title="{{zkappCommand.feePayer.body.publicKey}}">
                   <div class="badge badge-secondary badge-outline">
@@ -1358,13 +1356,13 @@
                   <td><code class="text-success">{{txn.hash}}</code></td>
                 </tr>
                 {{#txn.failureReason}}
-                  <tr class="hover">
+                  <tr class="!bg-red-600">
                     <td>
-                      <div class="badge badge-error badge-outline">
+                      <div class="badge badge-primary badge-outline">
                         Failure reason
                       </div>
                     </td>
-                    <td><code class="text-error">{{txn.failureReason}}</code></td>
+                    <td><code class="text-primary">{{txn.failureReason}}</code></td>
                   </tr>
                 {{/txn.failureReason}}
                 {{#txn.blockHash}}
@@ -1486,9 +1484,9 @@
                   <td><code class="text-success">{{txn.hash}}</code></td>
                 </tr>
                 {{#isFailedTxn}}
-                  <tr class="hover">
+                  <tr class="!bg-red-600">
                     <td>
-                      <div class="badge badge-error badge-outline">
+                      <div class="badge badge-primary badge-outline">
                         Failure reason
                       </div>
                     </td>
