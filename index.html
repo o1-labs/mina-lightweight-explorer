@@ -411,27 +411,35 @@
             {{#failureReason}}
               <tr class="!bg-red-600">
             {{/failureReason}}
-                <td title="{{hash}}">
+                <td class="align-top" title="{{hash}}">
                   <div class="badge badge-primary badge-outline">
                     <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
                       {{hashView}}
                     </a>
                   </div>
+                  <br />
+                  {{#memo}}
+                    <div class="text-gray-600 text-xs mt-0.5 pl-2.5">
+                      <span class="underline">Memo</span><span>:</span>
+                      <br />
+                      <div>{{memoView}}</div>
+                    </div>
+                  {{/memo}}
                 </td>
-                <td title="{{feePayer.publicKey}}">
+                <td class="align-top" title="{{feePayer.publicKey}}">
                   <div class="badge badge-secondary badge-outline">
                     <a class="link link-secondary" href="./index.html?target=account&publicKey={{feePayer.publicKey}}" target="_self">{{feePayerView}}</a>
                   </div>
                 </td>
-                <td title="{{receiver.publicKey}}">
+                <td class="align-top" title="{{receiver.publicKey}}">
                   <div class="badge badge-secondary badge-outline">
                     <a class="link link-secondary" href="./index.html?target=account&publicKey={{receiver.publicKey}}" target="_self">{{receiverView}}</a>
                   </div>
                 </td>
-                <td><div class="badge badge-accent badge-outline">{{kind}}</div></td>
-                <td><div class="badge badge-ghost">{{amountView}}</div></td>
-                <td><div class="badge badge-ghost">{{feeView}}</div></td>
-                <td><div class="badge badge-ghost">{{nonce}}</div></td>
+                <td class="align-top"><div class="badge badge-accent badge-outline">{{kind}}</div></td>
+                <td class="align-top"><div class="badge badge-ghost">{{amountView}}</div></td>
+                <td class="align-top"><div class="badge badge-ghost">{{feeView}}</div></td>
+                <td class="align-top"><div class="badge badge-ghost">{{nonce}}</div></td>
               </tr>
             {{/valueTransfers}}
           </tbody>
@@ -481,19 +489,27 @@
             {{#isFailedTxn}}
               <tr class="!bg-red-600">
             {{/isFailedTxn}}
-                <td title="{{hash}}">
+                <td class="align-top" title="{{hash}}">
                   <div class="badge badge-primary badge-outline">
                     <a class="link link-primary" href="./index.html?target=transaction&hash={{hash}}" target="_self">
                       {{hashView}}
                     </a>
                   </div>
+                  <br />
+                  {{#zkappCommand.memo}}
+                    <div class="text-gray-600 text-xs mt-0.5 pl-2.5">
+                      <span class="underline">Memo</span><span>:</span>
+                      <br />
+                      <span>{{memoView}}</span>
+                    </div>
+                  {{/zkappCommand.memo}}
                 </td>
-                <td title="{{zkappCommand.feePayer.body.publicKey}}">
+                <td class="align-top" title="{{zkappCommand.feePayer.body.publicKey}}">
                   <div class="badge badge-secondary badge-outline">
                     <a class="link link-secondary" href="./index.html?target=account&publicKey={{zkappCommand.feePayer.body.publicKey}}" target="_self">{{feePayerView}}</a>
                   </div>
                 </td>
-                <td>
+                <td class="align-top">
                   {{^zkappCommand.accountUpdates}}
                     <div class="badge badge-secondary badge-outline">
                       No data found
@@ -506,8 +522,8 @@
                     <br />
                   {{/zkappCommand.accountUpdates}}
                 </td>
-                <td><div class="badge badge-ghost">{{feeView}}</div></td>
-                <td><div class="badge badge-ghost">{{zkappCommand.feePayer.body.nonce}}</div></td>
+                <td class="align-top"><div class="badge badge-ghost">{{feeView}}</div></td>
+                <td class="align-top"><div class="badge badge-ghost">{{zkappCommand.feePayer.body.nonce}}</div></td>
               </tr>
             {{/zkApps}}
           </tbody>
