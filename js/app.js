@@ -636,12 +636,20 @@
   }
 
   function renderValueTransfersList(header, valueTransfers, containerId) {
+    for (const valueTransfer of valueTransfers) {
+      valueTransfer.memo = decodeBase58Message(valueTransfer.memo).trim();
+    }
     renderTemplate("valueTransfersListTemplate", containerId, {
       header,
       valueTransfers,
       txnsCounter: valueTransfers.length,
       hashView: function () {
         return ellipsify(this.hash);
+      },
+      memoView: function () {
+        return this
+          ? this.replace(RegExp(String.fromCharCode(28), "g"), "")
+          : "";
       },
       feePayerView: function () {
         return ellipsify(this.feePayer.publicKey);
@@ -661,6 +669,9 @@
   function renderZkAppsList(header, zkApps, containerId) {
     for (const zkApp of zkApps) {
       zkApp.isFailedTxn = zkApp.failureReason?.length > 0;
+      zkApp.zkappCommand.memo = decodeBase58Message(
+        zkApp.zkappCommand.memo
+      ).trim();
     }
     renderTemplate("zkAppsListTemplate", containerId, {
       header,
@@ -668,6 +679,11 @@
       txnsCounter: zkApps.length,
       hashView: function () {
         return ellipsify(this.hash);
+      },
+      memoView: function () {
+        return this
+          ? this.replace(RegExp(String.fromCharCode(28), "g"), "")
+          : "";
       },
       feePayerView: function () {
         return ellipsify(this.zkappCommand.feePayer.body.publicKey);
