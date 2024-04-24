@@ -646,11 +646,6 @@
       hashView: function () {
         return ellipsify(this.hash);
       },
-      memoView: function () {
-        return this
-          ? this.replace(RegExp(String.fromCharCode(28), "g"), "")
-          : "";
-      },
       feePayerView: function () {
         return ellipsify(this.feePayer.publicKey);
       },
@@ -679,11 +674,6 @@
       txnsCounter: zkApps.length,
       hashView: function () {
         return ellipsify(this.hash);
-      },
-      memoView: function () {
-        return this
-          ? this.replace(RegExp(String.fromCharCode(28), "g"), "")
-          : "";
       },
       feePayerView: function () {
         return ellipsify(this.zkappCommand.feePayer.body.publicKey);
@@ -1173,7 +1163,7 @@
     const decodedString = new TextDecoder().decode(
       decodedMessage.slice(2, decodedMessage.length - 4)
     );
-    return decodedString.replace(nullValueRegex, "");
+    return decodedString.replace(controlCharsRegExp, "");
   }
 
   function updateBlocksWithFailedTxnMark(blocks) {
