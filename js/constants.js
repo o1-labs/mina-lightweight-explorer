@@ -1,11 +1,11 @@
 // Update application version for every new release
-const applicationVersion = "v0.2.0";
+const applicationVersion = "v0.2.1";
 
 const timeZoneOffset = new Date().getTimezoneOffset() * 60000;
 const minaTokenId = "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf";
 const base58Alphabet =
   "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-const nullValueRegex = /\0[\s\S]*$/g;
+const controlCharsRegExp = /[\x00-\x1F\x7F]/g;
 const themes = [
   "light",
   "dark",
