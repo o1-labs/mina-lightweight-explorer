@@ -1,5 +1,5 @@
 // Update application version for every new release
-const applicationVersion = "v0.2.1";
+const applicationVersion = "v0.2.2";
 
 const timeZoneOffset = new Date().getTimezoneOffset() * 60000;
 const minaTokenId = "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf";
